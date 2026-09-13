@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5ee">
+  <title>Consumption Reporting &amp; Transparency | Nikhil Kumar</title>
+  <link rel="canonical" href="https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/reporting.html">
+  <meta name="description" content="Making cloud consumption understandable: deterministic aggregates, raw-usage traceability, and Nikhil Kumar's billing pipeline contribution and engineering summit presentation.">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Nikhil Kumar">
+  <meta property="og:url" content="https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/reporting.html">
+  <meta property="og:title" content="Consumption Reporting &amp; Transparency | Nikhil Kumar">
+  <meta property="og:description" content="A clear path from consumption totals to the usage behind them. Platform capabilities, billing pipeline delivery, and communicating auditability.">
+  <meta property="og:image" content="https://cracker-jack.github.io/nikhil-kumar-portfolio/assets/social-card.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Nikhil Kumar. Reliable by design. Measurable in impact.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="../assets/site.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Person","name":"Nikhil Kumar","url":"https://cracker-jack.github.io/nikhil-kumar-portfolio/","jobTitle":"Software Engineer II","worksFor":{"@type":"Organization","name":"Microsoft"},"sameAs":["https://www.linkedin.com/in/nikhilkr96/","https://topmate.io/nikhil_kr"]}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="../index.html" aria-label="Nikhil Kumar home"><span class="brand-mark" aria-hidden="true">N<span class="brand-slash">/</span>K</span><span class="brand-caption" aria-hidden="true">Nikhil Kumar<br>Software engineer</span></a>
+      <nav class="site-nav" aria-label="Main navigation" data-open="false">
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links"><span class="menu-label">Menu</span><span class="menu-icon" aria-hidden="true"></span></button>
+        <ul class="nav-links" id="nav-links">
+          <li><a href="../index.html#work">Work</a></li><li><a href="../index.html#experience">Experience</a></li><li><a href="../index.html#about">About</a></li><li><a href="../index.html#mentorship">Mentorship</a></li><li><a href="../index.html#contact">Contact</a></li><li><a class="nav-resume" href="../index.html#resume">Resume <span aria-hidden="true">&#8595;</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main id="main" tabindex="-1">
+    <article>
+      <header class="case-hero container">
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html#work">Selected work</a><span aria-hidden="true">/</span><span aria-current="page">Consumption Reporting</span></nav>
+        <p class="eyebrow">02 / Consumption transparency &amp; auditability</p>
+        <h1>A consumption total<br>should tell a clear story.</h1>
+        <p class="case-deck">Reporting is more useful when it can explain where a number came from. This work connects my billing pipeline contribution with the wider platform&rsquo;s consumption transparency.</p>
+        <dl class="case-facts">
+          <div><dt>Context</dt><dd>Microsoft &middot; Microsoft Purview</dd></div>
+          <div><dt>My role</dt><dd>Billing pipeline delivery; summit presentation</dd></div>
+          <div><dt>Platform technologies</dt><dd>Kusto / Azure Data Explorer, Scala / Spark, C# / .NET</dd></div>
+        </dl>
+      </header>
+      <div class="case-highlight">
+        <div class="container highlight-inner">
+          <p class="highlight-number">Traceable.</p>
+          <div class="highlight-copy"><h2>From reported aggregates to the raw usage behind them.</h2><p>Deterministic reporting and billing aggregates, raw-usage linkage, and Kusto-backed reporting APIs support consumption transparency and charge investigation.</p></div>
+        </div>
+      </div>
+      <div class="container case-layout">
+        <aside class="case-toc"><nav aria-label="On this page"><p>Inside the work</p><ol><li><a href="#problem">The problem</a></li><li><a href="#platform">Platform capabilities</a></li><li><a href="#contribution">My contribution</a></li><li><a href="#value">Why it matters</a></li></ol></nav></aside>
+        <div class="case-body">
+          <section class="case-section" id="problem">
+            <h2>The next question is always &ldquo;why?&rdquo;</h2>
+            <p>A consumption total answers how much a customer used. It does not, on its own, answer which underlying usage contributed to that total or how a charge can be investigated.</p>
+            <p>For consumption-based services, reporting and billing need to remain understandable together. <strong>The ability to trace a result back to its source</strong> makes a number something that can be explained rather than simply accepted.</p>
+          </section>
+          <section class="case-section" id="platform">
+            <h2>What the platform supports</h2>
+            <p>The wider platform provides deterministic reporting and billing aggregates linked to raw usage. Kusto-backed reporting APIs expose consumption information for reporting and investigation.</p>
+            <ol class="principles">
+              <li><div><h3>Deterministic aggregates</h3><p>Consistent aggregation gives reporting and billing a dependable foundation for interpreting consumption.</p></div></li>
+              <li><div><h3>Raw-usage traceability</h3><p>Linking aggregates to underlying usage supports auditability and investigation of reported consumption and charges.</p></div></li>
+              <li><div><h3>Queryable reporting</h3><p>Kusto-backed reporting APIs make consumption information available for reporting experiences and investigation.</p></div></li>
+            </ol>
+            <div class="scope-note"><p><strong>Platform context, not an authorship claim:</strong> these are capabilities of the wider system. My individual contribution is described separately below.</p></div>
+          </section>
+          <section class="case-section" id="contribution">
+            <h2>My contribution</h2>
+            <p>I delivered the consumption billing pipeline underlying this work, including the aggregation and delivery of invoice-ready usage. That implementation is covered in the <a href="billing-system.html">Consumption Billing System case study</a>.</p>
+            <p>I also <strong>presented billing reporting transparency and auditability to senior leadership at Microsoft&rsquo;s annual engineering summit in Redmond</strong>, explaining how the work supports a clearer understanding of consumption.</p>
+            <p>My contribution here is the delivered billing pipeline and communicating its relationship to consumption transparency. The reporting APIs and broader platform capabilities are not presented as components I individually authored.</p>
+          </section>
+          <section class="case-section" id="value">
+            <h2>Make charges explainable.</h2>
+            <p>The value of this platform capability is a clearer connection between consumption, reporting, and billing. Deterministic aggregates and raw-usage traceability support investigating charges and understanding the data behind a reported total.</p>
+            <p>For my work, this was also an opportunity to connect engineering detail with a product-level concern: why dependable consumption data matters to the people using it.</p>
+            <p class="takeaway">A trustworthy number is not just calculated correctly. It can be traced and explained.</p>
+          </section>
+        </div>
+      </div>
+    </article>
+    <nav class="case-bottom" aria-label="More project work"><div class="container case-bottom-inner"><div><p class="eyebrow">Next / 03</p><a class="next-project" href="free-trials.html">Free Trials &amp; Adoption <span aria-hidden="true">&#8599;</span></a></div><a class="back-to-work" href="../index.html#work">All selected work <span aria-hidden="true">&#8599;</span></a></div></nav>
+    <div class="container case-contact"><p>Want to talk about consumption transparency?</p><a href="mailto:kumarnikhil374@gmail.com">kumarnikhil374@gmail.com <span aria-hidden="true">&#8599;</span></a></div>
+  </main>
+  <footer class="site-footer"><div class="container footer-inner"><p>&copy; 2026 Nikhil Kumar. Built with care, without the clutter.</p><div class="footer-links"><a href="../index.html#resume">Resume</a><a href="https://topmate.io/nikhil_kr">Topmate</a><a href="https://www.linkedin.com/in/nikhilkr96/">LinkedIn</a><a href="#main">Back to top <span aria-hidden="true">&#8593;</span></a></div></div></footer>
+</body>
+</html>

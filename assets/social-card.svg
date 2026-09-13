@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Nikhil Kumar - Software Engineer II at Microsoft</title>
+  <desc id="desc">Reliable distributed systems. Measurable impact. A portfolio of billing, reporting, free trials, and enterprise migration.</desc>
+  <rect width="1200" height="630" fill="#f7f5ee"/>
+  <path d="M64 104H1136M64 534H1136" stroke="#d4d9ce"/>
+  <text x="64" y="67" fill="#166458" font-family="Arial, sans-serif" font-size="16" letter-spacing="3">SOFTWARE ENGINEER II / MICROSOFT</text>
+  <text x="1136" y="67" text-anchor="end" fill="#54635e" font-family="Arial, sans-serif" font-size="15" letter-spacing="2">SELECTED WORK</text>
+  <text x="58" y="263" fill="#192c2b" font-family="Georgia, serif" font-size="132" letter-spacing="-7">Nikhil</text>
+  <text x="58" y="389" fill="#166458" font-family="Georgia, serif" font-style="italic" font-size="132" letter-spacing="-7">Kumar.</text>
+  <text x="672" y="233" fill="#192c2b" font-family="Georgia, serif" font-size="39">Reliable by design.</text>
+  <text x="672" y="285" fill="#192c2b" font-family="Georgia, serif" font-size="39">Measurable in impact.</text>
+  <text x="674" y="346" fill="#54635e" font-family="Arial, sans-serif" font-size="20">Distributed systems. Data correctness.</text>
+  <text x="674" y="379" fill="#54635e" font-family="Arial, sans-serif" font-size="20">Products that solve real problems.</text>
+  <circle cx="684" cy="453" r="6" fill="#166458"/>
+  <path d="M710 453H1110" stroke="#d4d9ce"/>
+  <text x="64" y="582" fill="#54635e" font-family="Arial, sans-serif" font-size="16" letter-spacing="2">BILLING / REPORTING / FREE TRIALS / MIGRATION</text>
+  <text x="1136" y="582" text-anchor="end" fill="#166458" font-family="Georgia, serif" font-size="28">N/K</text>
+</svg>

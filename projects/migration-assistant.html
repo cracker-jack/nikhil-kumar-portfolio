@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5ee">
+  <title>DLP Migration Assistant | Nikhil Kumar</title>
+  <link rel="canonical" href="https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/migration-assistant.html">
+  <meta name="description" content="Co-owning the backend and building the mapping engine for the publicly shipped DLP Migration Assistant, supporting 40+ enterprises moving to Microsoft Purview.">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Nikhil Kumar">
+  <meta property="og:url" content="https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/migration-assistant.html">
+  <meta property="og:title" content="DLP Migration Assistant | Nikhil Kumar">
+  <meta property="og:description" content="Guided policy migration from Symantec and Forcepoint to Microsoft Purview. Backend co-ownership and a mapping engine supporting 40+ enterprises.">
+  <meta property="og:image" content="https://cracker-jack.github.io/nikhil-kumar-portfolio/assets/social-card.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Nikhil Kumar. Reliable by design. Measurable in impact.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="../assets/site.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Person","name":"Nikhil Kumar","url":"https://cracker-jack.github.io/nikhil-kumar-portfolio/","jobTitle":"Software Engineer II","worksFor":{"@type":"Organization","name":"Microsoft"},"sameAs":["https://www.linkedin.com/in/nikhilkr96/","https://topmate.io/nikhil_kr"]}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="../index.html" aria-label="Nikhil Kumar home"><span class="brand-mark" aria-hidden="true">N<span class="brand-slash">/</span>K</span><span class="brand-caption" aria-hidden="true">Nikhil Kumar<br>Software engineer</span></a>
+      <nav class="site-nav" aria-label="Main navigation" data-open="false">
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links"><span class="menu-label">Menu</span><span class="menu-icon" aria-hidden="true"></span></button>
+        <ul class="nav-links" id="nav-links">
+          <li><a href="../index.html#work">Work</a></li><li><a href="../index.html#experience">Experience</a></li><li><a href="../index.html#about">About</a></li><li><a href="../index.html#mentorship">Mentorship</a></li><li><a href="../index.html#contact">Contact</a></li><li><a class="nav-resume" href="../index.html#resume">Resume <span aria-hidden="true">&#8595;</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main id="main" tabindex="-1">
+    <article>
+      <header class="case-hero container">
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html#work">Selected work</a><span aria-hidden="true">/</span><span aria-current="page">DLP Migration Assistant</span></nav>
+        <p class="eyebrow">04 / Enterprise migration &middot; Publicly shipped</p>
+        <h1>Thousands of policies.<br>A more practical way forward.</h1>
+        <p class="case-deck">Co-owning the backend of a desktop tool that helps enterprises move data loss prevention policies from Symantec and Forcepoint to Microsoft Purview.</p>
+        <dl class="case-facts">
+          <div><dt>Context</dt><dd>Microsoft &middot; Microsoft Purview DLP</dd></div>
+          <div><dt>My role</dt><dd>Backend co-owner; mapping engine implementation</dd></div>
+          <div><dt>Technologies</dt><dd>C# / .NET, WPF, PowerShell, XML, SQL backups</dd></div>
+        </dl>
+      </header>
+      <div class="case-highlight">
+        <div class="container highlight-inner">
+          <p class="highlight-number">40+</p>
+          <div class="highlight-copy"><h2>Enterprise customers, each with 1,000+ policies.</h2><p>Guided automation replaced weeks of manual policy-migration work. The assistant is publicly available, with official Microsoft documentation.</p></div>
+        </div>
+      </div>
+      <div class="container case-layout">
+        <aside class="case-toc"><nav aria-label="On this page"><p>Inside the work</p><ol><li><a href="#problem">The problem</a></li><li><a href="#contribution">My contribution</a></li><li><a href="#approach">The approach</a></li><li><a href="#outcome">Outcome &amp; public links</a></li></ol></nav></aside>
+        <div class="case-body">
+          <section class="case-section" id="problem">
+            <h2>Migration is a translation problem.</h2>
+            <p>An enterprise DLP policy estate is more than a collection of settings. It contains sensitive information types, regular expressions, keywords, and rules that have to be understood in the target platform&rsquo;s terms.</p>
+            <p>Moving thousands of policies from Symantec or Forcepoint to Microsoft Purview manually meant weeks of work. A useful migration tool needed to <strong>translate policy intent</strong>, not simply copy configuration.</p>
+          </section>
+          <section class="case-section" id="contribution">
+            <h2>My contribution</h2>
+            <p>I <strong>co-owned the backend</strong> of the publicly shipped DLP Migration Assistant and <strong>built its policy-mapping engine</strong>.</p>
+            <p>The engine maps policy constructs from Symantec XML exports and Forcepoint SQL backups into Microsoft Purview policies and scripts. That includes mapping sensitive information types, regular expressions, and keywords.</p>
+            <p>The product is a Windows desktop application. My contribution was the backend and mapping work, within a broader team-delivered tool.</p>
+          </section>
+          <section class="case-section" id="approach">
+            <h2>From source constructs to target policies.</h2>
+            <p>The mapping engine connects the source policy representation to the constructs supported by Microsoft Purview. The broader assistant wraps that work in a guided migration experience.</p>
+            <ol class="principles">
+              <li><div><h3>Interpret the source</h3><p>Work with Symantec policy XML exports and Forcepoint backup data to identify the sensitive information types, regular expressions, and keywords to translate.</p></div></li>
+              <li><div><h3>Map policy meaning</h3><p>Map the source constructs into Microsoft Purview equivalents and scripts rather than treating migration as a file-format conversion.</p></div></li>
+              <li><div><h3>Support a guided migration</h3><p>The publicly documented assistant analyzes inputs, maps supported constructs, executes PowerShell-based migration, and reports migration status and recommendations.</p></div></li>
+            </ol>
+            <div class="scope-note"><p><strong>Tool capability:</strong> official documentation describes supported constructs and migration limitations, including partial and unsupported mappings. Guided automation does not mean every source policy has a direct equivalent.</p></div>
+          </section>
+          <section class="case-section" id="outcome">
+            <h2>A shipped tool for a real adoption barrier.</h2>
+            <p>The assistant supported <strong>40+ enterprise customers, each with 1,000+ policies</strong>, replacing weeks of manual work with guided automation. This describes the scale of the supported migrations and the manual effort addressed, not a measured end-to-end completion time.</p>
+            <p>The work is publicly visible through the OfficeDev repository and Microsoft Learn documentation. The documentation covers the product&rsquo;s behavior and supported mappings; the individual contributions described above are my own project experience.</p>
+            <div class="source-links">
+              <a class="button button-primary" href="https://github.com/OfficeDev/DLPmigrationassistant">Public GitHub repository <span aria-hidden="true">&#8599;</span></a>
+              <a class="button button-secondary" href="https://learn.microsoft.com/purview/dlp-migration-assistant-for-symantec-learn">Microsoft documentation <span aria-hidden="true">&#8599;</span></a>
+            </div>
+            <p class="takeaway">Good migration tooling makes the translation explicit, so adoption is not held back by manual repetition.</p>
+          </section>
+        </div>
+      </div>
+    </article>
+    <nav class="case-bottom" aria-label="More project work"><div class="container case-bottom-inner"><div><p class="eyebrow">Explore / 01</p><a class="next-project" href="billing-system.html">Consumption Billing System <span aria-hidden="true">&#8599;</span></a></div><a class="back-to-work" href="../index.html#work">All selected work <span aria-hidden="true">&#8599;</span></a></div></nav>
+    <div class="container case-contact"><p>Want to talk about enterprise migration tooling?</p><a href="mailto:kumarnikhil374@gmail.com">kumarnikhil374@gmail.com <span aria-hidden="true">&#8599;</span></a></div>
+  </main>
+  <footer class="site-footer"><div class="container footer-inner"><p>&copy; 2026 Nikhil Kumar. Built with care, without the clutter.</p><div class="footer-links"><a href="../index.html#resume">Resume</a><a href="https://topmate.io/nikhil_kr">Topmate</a><a href="https://www.linkedin.com/in/nikhilkr96/">LinkedIn</a><a href="#main">Back to top <span aria-hidden="true">&#8593;</span></a></div></div></footer>
+</body>
+</html>

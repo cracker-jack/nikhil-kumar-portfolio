@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5ee">
+  <title>Consumption Billing System | Nikhil Kumar</title>
+  <link rel="canonical" href="https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/billing-system.html">
+  <meta name="description" content="Delivering a multi-region Microsoft Purview consumption billing pipeline: 6+ cloud service integrations, three-layer deduplication, and US government cloud expansion.">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Nikhil Kumar">
+  <meta property="og:url" content="https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/billing-system.html">
+  <meta property="og:title" content="Consumption Billing System | Nikhil Kumar">
+  <meta property="og:description" content="From multi-service usage to invoice-ready data. A case study in billing correctness, regional delivery, and government cloud expansion.">
+  <meta property="og:image" content="https://cracker-jack.github.io/nikhil-kumar-portfolio/assets/social-card.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Nikhil Kumar. Reliable by design. Measurable in impact.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="../assets/site.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Person","name":"Nikhil Kumar","url":"https://cracker-jack.github.io/nikhil-kumar-portfolio/","jobTitle":"Software Engineer II","worksFor":{"@type":"Organization","name":"Microsoft"},"sameAs":["https://www.linkedin.com/in/nikhilkr96/","https://topmate.io/nikhil_kr"]}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="../index.html" aria-label="Nikhil Kumar home"><span class="brand-mark" aria-hidden="true">N<span class="brand-slash">/</span>K</span><span class="brand-caption" aria-hidden="true">Nikhil Kumar<br>Software engineer</span></a>
+      <nav class="site-nav" aria-label="Main navigation" data-open="false">
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links"><span class="menu-label">Menu</span><span class="menu-icon" aria-hidden="true"></span></button>
+        <ul class="nav-links" id="nav-links">
+          <li><a href="../index.html#work">Work</a></li><li><a href="../index.html#experience">Experience</a></li><li><a href="../index.html#about">About</a></li><li><a href="../index.html#mentorship">Mentorship</a></li><li><a href="../index.html#contact">Contact</a></li><li><a class="nav-resume" href="../index.html#resume">Resume <span aria-hidden="true">&#8595;</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main id="main" tabindex="-1">
+    <article>
+      <header class="case-hero container">
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html#work">Selected work</a><span aria-hidden="true">/</span><span aria-current="page">Consumption Billing System</span></nav>
+        <p class="eyebrow">01 / Distributed systems &amp; data correctness</p>
+        <h1>Usage is only useful<br>if you can bill it correctly.</h1>
+        <p class="case-deck">Delivering a multi-region Microsoft Purview consumption billing pipeline that turns usage from 6+ cloud services into invoice-ready data for Microsoft commerce.</p>
+        <dl class="case-facts">
+          <div><dt>Context</dt><dd>Microsoft &middot; Microsoft Purview</dd></div>
+          <div><dt>My role</dt><dd>Pipeline delivery and maintenance</dd></div>
+          <div><dt>Core technologies</dt><dd>C# / .NET, Scala / Spark, Service Fabric, Azure</dd></div>
+        </dl>
+      </header>
+      <div class="case-highlight">
+        <div class="container highlight-inner">
+          <p class="highlight-number">6+</p>
+          <div class="highlight-copy"><h2>Cloud service integrations. Invoice accuracy at the center.</h2><p>A multi-region pipeline with three layers of deduplication and an extension to US government clouds for public-sector billing.</p></div>
+        </div>
+      </div>
+      <div class="container case-layout">
+        <aside class="case-toc"><nav aria-label="On this page"><p>Inside the work</p><ol><li><a href="#problem">The problem</a></li><li><a href="#contribution">My contribution</a></li><li><a href="#decisions">Engineering decisions</a></li><li><a href="#outcome">The outcome</a></li></ol></nav></aside>
+        <div class="case-body">
+          <section class="case-section" id="problem">
+            <h2>A billing pipeline is a trust boundary.</h2>
+            <p>Cloud consumption begins as usage, but eventually becomes a line on an invoice. Between those two points, data from multiple services and regions has to be aggregated and delivered consistently.</p>
+            <p>Repeated records are not merely a data quality issue here: they can distort what a customer is charged. The challenge was to deliver invoice-ready consumption data while treating <strong>correctness as a property of the whole pipeline</strong>, not just its aggregation step.</p>
+          </section>
+          <section class="case-section" id="contribution">
+            <h2>My contribution</h2>
+            <p>I owned delivery and maintenance of the multi-region consumption billing pipeline. This work combined <strong>Scala and Apache Spark aggregation</strong> with <strong>C# / .NET services on Service Fabric</strong> to deliver invoice-ready usage to Microsoft commerce.</p>
+            <p>I designed a three-layer deduplication approach, created reusable regional deployment templates, and worked on network, firewall, and access security. I also extended the pipeline to US government clouds with isolated identity, access, and network controls.</p>
+            <div class="scope-note"><p><strong>Scope of ownership:</strong> this case study covers my billing pipeline work and its integrations. It does not imply ownership of every upstream service or component in the wider platform.</p></div>
+          </section>
+          <section class="case-section" id="decisions">
+            <h2>Correctness needs more than one checkpoint.</h2>
+            <p>Duplicates can appear at different stages. I designed defenses at three distinct points so that the final delivery did not rely on a single check earlier in the pipeline.</p>
+            <ol class="principles">
+              <li><div><h3>Within-batch deduplication</h3><p>Remove repeated records within the current aggregation batch, before they can inflate the resulting usage.</p></div></li>
+              <li><div><h3>Historical lookback</h3><p>Check against prior processing history to identify duplicates that arrive in a later batch.</p></div></li>
+              <li><div><h3>Atomic cache check at delivery</h3><p>Add a final deduplication boundary when delivering usage, protecting invoice accuracy at the point where it matters.</p></div></li>
+            </ol>
+            <h3>Make regional delivery repeatable.</h3>
+            <p>Reusable deployment templates made the regional setup repeatable. Network, firewall, and access controls were part of delivery rather than a separate concern left until the end.</p>
+            <h3>Extend capability without assuming the same environment.</h3>
+            <p>US government cloud expansion required isolated identity, access, and networking controls. Extending the pipeline under those constraints enabled public-sector consumption billing.</p>
+          </section>
+          <section class="case-section" id="outcome">
+            <h2>Invoice-ready, across services and regions.</h2>
+            <p>The delivered pipeline integrated <strong>6+ cloud services</strong>, aggregated usage into invoice-ready data, and supported multi-region delivery. Its three-layer deduplication design protected invoice accuracy, while the government cloud extension enabled billing for public-sector environments.</p>
+            <p>The impact is in the foundation: dependable consumption data for commerce, reusable regional deployment, and explicit attention to data correctness and secure delivery.</p>
+            <p class="takeaway">In billing, correctness is not a final validation step. It is a design decision at every boundary.</p>
+          </section>
+        </div>
+      </div>
+    </article>
+    <nav class="case-bottom" aria-label="More project work"><div class="container case-bottom-inner"><div><p class="eyebrow">Next / 02</p><a class="next-project" href="reporting.html">Consumption Reporting <span aria-hidden="true">&#8599;</span></a></div><a class="back-to-work" href="../index.html#work">All selected work <span aria-hidden="true">&#8599;</span></a></div></nav>
+    <div class="container case-contact"><p>Want to talk about reliable distributed systems?</p><a href="mailto:kumarnikhil374@gmail.com">kumarnikhil374@gmail.com <span aria-hidden="true">&#8599;</span></a></div>
+  </main>
+  <footer class="site-footer"><div class="container footer-inner"><p>&copy; 2026 Nikhil Kumar. Built with care, without the clutter.</p><div class="footer-links"><a href="../index.html#resume">Resume</a><a href="https://topmate.io/nikhil_kr">Topmate</a><a href="https://www.linkedin.com/in/nikhilkr96/">LinkedIn</a><a href="#main">Back to top <span aria-hidden="true">&#8593;</span></a></div></div></footer>
+</body>
+</html>

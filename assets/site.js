@@ -4,12 +4,15 @@
   const header = document.querySelector(".site-header");
   const nav = document.querySelector(".site-nav");
   const toggle = document.querySelector(".nav-toggle");
-  if (!header || !nav || !toggle) {
+  const firstLink = document.querySelector(".nav-links a");
+  if (!header || !nav || !toggle || !firstLink) {
     console.error("Navigation could not initialize: required markup is missing.");
     return;
   }
 
   const mobile = window.matchMedia("(max-width: 760px)");
+  let compactLayout = mobile.matches;
+  let focusedNavItem = nav.contains(document.activeElement) ? document.activeElement : null;
   const setOpen = (open) => {
     nav.dataset.open = String(open);
     toggle.setAttribute("aria-expanded", String(open));
@@ -39,13 +42,114 @@
     }
   });
 
-  mobile.addEventListener("change", () => {
-    if (mobile.matches && nav.contains(document.activeElement)) {
-      toggle.focus();
+  nav.addEventListener("focusin", (event) => {
+    focusedNavItem = event.target;
+  });
+  nav.addEventListener("focusout", (event) => {
+    if (nav.contains(event.relatedTarget)) return;
+    // CSS may blur a hidden item before the media-query change event runs.
+    if (mobile.matches === compactLayout || event.relatedTarget !== null) {
+      focusedNavItem = null;
     }
+  });
+
+  mobile.addEventListener("change", () => {
+    const hadNavFocus = nav.contains(document.activeElement) || focusedNavItem !== null;
+    const hadToggleFocus = document.activeElement === toggle || focusedNavItem === toggle;
+    compactLayout = mobile.matches;
     setOpen(false);
+    if (mobile.matches && hadNavFocus) {
+      toggle.focus();
+    } else if (!mobile.matches && hadToggleFocus) {
+      firstLink.focus();
+    }
   });
 
   setOpen(false);
   header.classList.add("nav-ready");
+})();
+
+(() => {
+  "use strict";
+
+  const carousel = document.querySelector(".testimonial-carousel");
+  if (!carousel) return;
+
+  const track = carousel.querySelector(".testimonial-track");
+  const controls = carousel.querySelector(".carousel-controls");
+  const previous = carousel.querySelector("[data-carousel-previous]");
+  const next = carousel.querySelector("[data-carousel-next]");
+  const status = carousel.querySelector(".carousel-status");
+  if (!track || !controls || !previous || !next || !status) {
+    console.error("Testimonials could not initialize: required markup is missing.");
+    return;
+  }
+
+  const slides = Array.from(track.querySelectorAll(".testimonial"));
+  if (slides.length === 0) {
+    console.error("Testimonials could not initialize: no reviews were found.");
+    return;
+  }
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  const updateState = () => {
+    const bounds = track.getBoundingClientRect();
+    const visible = slides.filter((slide) => {
+      const box = slide.getBoundingClientRect();
+      const center = box.left + box.width / 2;
+      return center >= bounds.left && center <= bounds.right;
+    });
+    if (visible.length > 0) {
+      const first = slides.indexOf(visible[0]) + 1;
+      const last = slides.indexOf(visible[visible.length - 1]) + 1;
+      const text = `${first === last ? first : `${first}\u2013${last}`} of ${slides.length}`;
+      if (status.textContent !== text) status.textContent = text;
+    }
+    previous.disabled = track.scrollLeft <= 2;
+    next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
+  };
+
+  const goTo = (left) => {
+    track.scrollTo({ left, behavior: reducedMotion.matches ? "auto" : "smooth" });
+  };
+
+  const move = (direction) => {
+    const firstLeft = slides[0].getBoundingClientRect().left;
+    const maximum = track.scrollWidth - track.clientWidth;
+    // Clamp stops so the final partial page is reachable without duplicate slides.
+    const stops = [...new Set(slides.map((slide) =>
+      Math.min(maximum, Math.max(0, slide.getBoundingClientRect().left - firstLeft))
+    ))];
+    const destination = direction > 0
+      ? stops.find((left) => left > track.scrollLeft + 2)
+      : stops.reverse().find((left) => left < track.scrollLeft - 2);
+    if (destination !== undefined) goTo(destination);
+  };
+
+  previous.addEventListener("click", () => move(-1));
+  next.addEventListener("click", () => move(1));
+  track.addEventListener("keydown", (event) => {
+    if (event.target !== track) return;
+    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+      event.preventDefault();
+      move(event.key === "ArrowRight" ? 1 : -1);
+    } else if (event.key === "Home" || event.key === "End") {
+      event.preventDefault();
+      goTo(event.key === "Home" ? 0 : track.scrollWidth - track.clientWidth);
+    }
+  });
+
+  let frame = 0;
+  track.addEventListener("scroll", () => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      updateState();
+    });
+  }, { passive: true });
+  const resizeObserver = new ResizeObserver(updateState);
+  resizeObserver.observe(track);
+
+  controls.hidden = false;
+  updateState();
 })();

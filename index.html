@@ -42,8 +42,7 @@
   <header class="site-header">
     <div class="container header-inner">
       <a class="brand" href="index.html" aria-label="Nikhil Kumar home">
-        <span class="brand-mark" aria-hidden="true">N<span class="brand-slash">/</span>K</span>
-        <span class="brand-caption" aria-hidden="true">Nikhil Kumar<br>Software engineer</span>
+        Nikhil Kumar
       </a>
       <nav class="site-nav" aria-label="Main navigation" data-open="false">
         <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links"><span class="menu-label">Menu</span><span class="menu-icon" aria-hidden="true"></span></button>
@@ -66,6 +65,13 @@
       </div>
       <div class="hero-grid">
         <h1 class="hero-name" id="hero-title"><span>Nikhil</span> <span class="name-last">Kumar.</span></h1>
+        <figure class="hero-portrait">
+          <picture>
+            <source type="image/webp" srcset="assets/images/nikhil-at-work-480.webp 480w, assets/images/nikhil-at-work-768.webp 768w, assets/images/nikhil-at-work-1080.webp 1080w" sizes="(max-width: 480px) calc(100vw - 40px), (max-width: 760px) 420px, (max-width: 1050px) 40vw, 420px">
+            <img src="assets/images/nikhil-at-work-768.jpg" width="768" height="1024" alt="Nikhil Kumar working at a laptop" fetchpriority="high">
+          </picture>
+          <figcaption><span>Nikhil Kumar</span><span>Engineer &amp; mentor</span></figcaption>
+        </figure>
         <div class="hero-copy">
           <p class="hero-statement">Reliable by design.<br>Measurable in impact.</p>
           <p>I engineer distributed systems where correctness matters, from invoice-ready cloud consumption to enterprise policy migration.</p>
@@ -201,22 +207,30 @@
       <div class="section-heading"><div><p class="eyebrow">03 / About &amp; toolkit</p><h2 id="about-title">The details make<br>the difference.</h2></div></div>
       <div class="about-grid">
         <div>
-          <div class="about-copy">
-            <p class="lead">My work sits where distributed systems meet real product needs.</p>
-            <p>At Microsoft, that means getting consumption data ready for billing, making it easier to understand, and helping enterprises adopt new capabilities.</p>
-            <p>Across eight years of engineering, the recurring challenge has been the same: translate a complex problem into software people can depend on.</p>
-          </div>
+          <figure class="about-portrait">
+            <picture>
+              <source type="image/webp" srcset="assets/images/nikhil-at-microsoft-480.webp 480w, assets/images/nikhil-at-microsoft-768.webp 768w, assets/images/nikhil-at-microsoft-960.webp 960w" sizes="(max-width: 760px) calc(100vw - 40px), (max-width: 1050px) calc(50vw - 56px), (max-width: 1352px) calc(50vw - 96px), 580px">
+              <img src="assets/images/nikhil-at-microsoft-768.jpg" width="768" height="576" alt="Nikhil Kumar standing beside a Microsoft sign" loading="lazy" decoding="async">
+            </picture>
+          </figure>
           <div class="details-grid">
             <div><h3>Education</h3><p><strong>Bachelor of Engineering</strong><br>Netaji Subhas Institute of Technology, University of Delhi<br>2014 &ndash; 2018</p></div>
             <div><h3>Recognition</h3><p><strong>Best Performing Team</strong><br>MakeMyTrip, 2019</p><p><strong>INSPIRE Scholarship (SHE)</strong><br>Government of India</p></div>
           </div>
         </div>
-        <div aria-label="Technical skills">
-          <div class="skill-group"><h3>Languages</h3><p>Java &middot; C# &middot; Scala &middot; Python &middot; JavaScript &middot; PowerShell</p></div>
-          <div class="skill-group"><h3>Frameworks &amp; runtimes</h3><p>.NET &middot; Spring Boot &middot; Apache Spark &middot; Service Fabric &middot; React &middot; WPF</p></div>
-          <div class="skill-group"><h3>Cloud &amp; data</h3><p>Azure Event Hubs &middot; ADLS Gen2 &middot; Redis &middot; Kusto / Azure Data Explorer &middot; Key Vault</p></div>
-          <div class="skill-group"><h3>Engineering focus</h3><p>Distributed systems &middot; Microservices &middot; Event-driven architecture &middot; Multi-region systems &middot; Data correctness &middot; Network security</p></div>
-          <div class="skill-group"><h3>Delivery tools</h3><p>Git &middot; Jenkins</p></div>
+        <div>
+          <div class="about-copy">
+            <p class="lead">My work sits where distributed systems meet real product needs.</p>
+            <p>At Microsoft, that means getting consumption data ready for billing, making it easier to understand, and helping enterprises adopt new capabilities.</p>
+            <p>Across eight years of engineering, the recurring challenge has been the same: translate a complex problem into software people can depend on.</p>
+          </div>
+          <div class="about-skills" aria-label="Technical skills">
+            <div class="skill-group"><h3>Languages</h3><p>Java &middot; C# &middot; Scala &middot; Python &middot; JavaScript &middot; PowerShell</p></div>
+            <div class="skill-group"><h3>Frameworks &amp; runtimes</h3><p>.NET &middot; Spring Boot &middot; Apache Spark &middot; Service Fabric &middot; React &middot; WPF</p></div>
+            <div class="skill-group"><h3>Cloud &amp; data</h3><p>Azure Event Hubs &middot; ADLS Gen2 &middot; Redis &middot; Kusto / Azure Data Explorer &middot; Key Vault</p></div>
+            <div class="skill-group"><h3>Engineering focus</h3><p>Distributed systems &middot; Microservices &middot; Event-driven architecture &middot; Multi-region systems &middot; Data correctness &middot; Network security</p></div>
+            <div class="skill-group"><h3>Delivery tools</h3><p>Git &middot; Jenkins</p></div>
+          </div>
         </div>
       </div>
     </section>
@@ -255,24 +269,87 @@
         </ul>
         <p class="source-note">Platform-awarded badges, shown as earned distinctions rather than a current ranking.</p>
       </div>
-      <div class="testimonial-heading"><h3>In their words.</h3><a href="https://topmate.io/nikhil_kr">Explore all 85 testimonials on Topmate <span aria-hidden="true">&#8599;</span></a></div>
-      <div class="testimonial-grid">
-        <figure class="testimonial">
-          <p class="testimonial-topic">Interview preparation</p>
-          <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;The problems and comprehensive feedback helped me improve my problem-solving skills and gain confidence in my abilities&hellip;&rdquo;</p></blockquote>
-          <figcaption><a href="https://topmate.io/nikhil_kr">Mohit</a><span>Topmate &middot; <time datetime="2023">2023</time></span></figcaption>
+      <article class="times-square-feature" id="times-square" aria-labelledby="times-square-title">
+        <figure class="feature-image">
+          <a href="https://www.linkedin.com/feed/update/urn:li:activity:7316494661861183488/" aria-label="Read Nikhil Kumar's Times Square post on LinkedIn">
+            <picture>
+              <source type="image/webp" srcset="assets/images/nikhil-times-square-480.webp 480w, assets/images/nikhil-times-square-768.webp 768w, assets/images/nikhil-times-square-1092.webp 1092w" sizes="(max-width: 760px) calc(100vw - 40px), (max-width: 1352px) 52vw, 654px">
+              <img src="assets/images/nikhil-times-square-768.jpg" width="768" height="445" alt="A Times Square billboard displaying Nikhil Kumar in Topmate's Meet the Game Changers showcase" loading="lazy" decoding="async">
+            </picture>
+          </a>
+          <figcaption>Times Square feature &middot; <time datetime="2025-04-09">9 April 2025</time></figcaption>
         </figure>
-        <figure class="testimonial">
-          <p class="testimonial-topic">Career direction</p>
-          <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;His friendly, and insightful approach provided a clear roadmap for my career path, suggesting precise study routes.&rdquo;</p></blockquote>
-          <figcaption><a href="https://topmate.io/nikhil_kr">Arshi Singh</a><span>Topmate &middot; <time datetime="2023">2023</time></span></figcaption>
-        </figure>
-        <figure class="testimonial">
-          <p class="testimonial-topic">Moving into development</p>
-          <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;I'm now confident and eager to switch my domain from testing to development.&rdquo;</p></blockquote>
-          <figcaption><a href="https://topmate.io/nikhil_kr">Varsha Foujdhar</a><span>Topmate &middot; <time datetime="2023">2023</time></span></figcaption>
-        </figure>
-      </div>
+        <div class="feature-copy">
+          <p class="eyebrow">A mentoring milestone</p>
+          <h3 id="times-square-title">From 1:1 conversations<br>to Times Square.</h3>
+          <p>I was featured in Times Square as one of Topmate&rsquo;s Quarter 1 Game Changers in 2025.</p>
+          <p>A memorable moment in a journey that started with a simple intent to give back through mentorship, career guidance, resume reviews, and mock interviews.</p>
+          <a class="button button-secondary" href="https://www.linkedin.com/feed/update/urn:li:activity:7316494661861183488/">Read the story on LinkedIn <span aria-hidden="true">&#8599;</span></a>
+        </div>
+      </article>
+      <section class="testimonial-carousel" aria-labelledby="testimonials-title" aria-roledescription="carousel">
+        <div class="testimonial-heading"><h3 id="testimonials-title">Real conversations.<br>Real perspective.</h3><a href="https://topmate.io/nikhil_kr">Explore all 85 testimonials on Topmate <span aria-hidden="true">&#8599;</span></a></div>
+        <div class="carousel-toolbar">
+          <p class="carousel-hint" id="testimonial-instructions">10 voices. Swipe or scroll to explore. Focus the reviews to use Left/Right, Home, or End.</p>
+          <div class="carousel-controls" hidden>
+            <button class="carousel-button" type="button" data-carousel-previous aria-label="Previous testimonial" aria-controls="testimonial-track" disabled><span aria-hidden="true">&#8592;</span></button>
+            <span class="carousel-status" role="status" aria-live="polite" aria-atomic="true">1 of 10</span>
+            <button class="carousel-button" type="button" data-carousel-next aria-label="Next testimonial" aria-controls="testimonial-track"><span aria-hidden="true">&#8594;</span></button>
+          </div>
+        </div>
+        <div class="testimonial-track" id="testimonial-track" tabindex="0" role="region" aria-label="Scrollable mentorship reviews" aria-describedby="testimonial-instructions">
+          <figure class="testimonial" aria-label="1 of 10" aria-roledescription="slide">
+            <p class="testimonial-topic">A clearer perspective</p>
+            <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;His guidance gave me a much clearer perspective&hellip;&rdquo;</p></blockquote>
+            <figcaption><a href="https://topmate.io/nikhil_kr">Ankur Pandey</a><span>Topmate &middot; <time datetime="2026">2026</time></span></figcaption>
+          </figure>
+          <figure class="testimonial" aria-label="2 of 10" aria-roledescription="slide">
+            <p class="testimonial-topic">Interview readiness</p>
+            <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;&hellip;making me feel well-prepared for my upcoming interviews.&rdquo;</p></blockquote>
+            <figcaption><a href="https://topmate.io/nikhil_kr">Mohit</a><span>Topmate &middot; <time datetime="2023">2023</time></span></figcaption>
+          </figure>
+          <figure class="testimonial" aria-label="3 of 10" aria-roledescription="slide">
+            <p class="testimonial-topic">Thinking through system failures</p>
+            <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;&hellip;valuable pointers, such as considering potential failures&hellip;&rdquo;</p></blockquote>
+            <figcaption><a href="https://topmate.io/nikhil_kr">Chiquita R. Prabhu</a><span>Topmate &middot; <time datetime="2024">2024</time></span></figcaption>
+          </figure>
+          <figure class="testimonial" aria-label="4 of 10" aria-roledescription="slide">
+            <p class="testimonial-topic">Career direction</p>
+            <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;&hellip;provided a clear roadmap for my career path, suggesting precise study routes.&rdquo;</p></blockquote>
+            <figcaption><a href="https://topmate.io/nikhil_kr">Arshi Singh</a><span>Topmate &middot; <time datetime="2023">2023</time></span></figcaption>
+          </figure>
+          <figure class="testimonial" aria-label="5 of 10" aria-roledescription="slide">
+            <p class="testimonial-topic">Actionable feedback</p>
+            <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;&hellip;constructive feedback that helped me see where I can improve.&rdquo;</p></blockquote>
+            <figcaption><a href="https://topmate.io/nikhil_kr">Kirity Ganga</a><span>Topmate &middot; <time datetime="2024">2024</time></span></figcaption>
+          </figure>
+          <figure class="testimonial" aria-label="6 of 10" aria-roledescription="slide">
+            <p class="testimonial-topic">Looking toward development</p>
+            <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;&hellip;eager to switch my domain from testing to development.&rdquo;</p></blockquote>
+            <figcaption><a href="https://topmate.io/nikhil_kr">Varsha Foujdhar</a><span>Topmate &middot; <time datetime="2023">2023</time></span></figcaption>
+          </figure>
+          <figure class="testimonial" aria-label="7 of 10" aria-roledescription="slide">
+            <p class="testimonial-topic">A stronger resume</p>
+            <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;&hellip;improving the content and structure of my resume.&rdquo;</p></blockquote>
+            <figcaption><a href="https://topmate.io/nikhil_kr">Benjamin Arnett</a><span>Topmate &middot; <time datetime="2024">2024</time></span></figcaption>
+          </figure>
+          <figure class="testimonial" aria-label="8 of 10" aria-roledescription="slide">
+            <p class="testimonial-topic">Confidence with algorithms</p>
+            <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;I feel more confident in data structures and algorithms.&rdquo;</p></blockquote>
+            <figcaption><a href="https://topmate.io/nikhil_kr">Prashant Verma</a><span>Topmate &middot; <time datetime="2023">2023</time></span></figcaption>
+          </figure>
+          <figure class="testimonial" aria-label="9 of 10" aria-roledescription="slide">
+            <p class="testimonial-topic">Communicating in interviews</p>
+            <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;&hellip;suggested to work on my communication skills (thinking out loud)&hellip;&rdquo;</p></blockquote>
+            <figcaption><a href="https://topmate.io/nikhil_kr">Aadil</a><span>Topmate &middot; <time datetime="2024">2024</time></span></figcaption>
+          </figure>
+          <figure class="testimonial" aria-label="10 of 10" aria-roledescription="slide">
+            <p class="testimonial-topic">Space for every question</p>
+            <blockquote cite="https://topmate.io/nikhil_kr"><p>&ldquo;&hellip;thoroughly addressed all my concerns and clarified any doubts&hellip;&rdquo;</p></blockquote>
+            <figcaption><a href="https://topmate.io/nikhil_kr">Pragya Tiwari</a><span>Topmate &middot; <time datetime="2024">2024</time></span></figcaption>
+          </figure>
+        </div>
+      </section>
       <p class="source-note mentorship-source">Selected testimonial excerpts and profile figures from <a href="https://topmate.io/nikhil_kr">Topmate</a>, checked <time datetime="2026-09-13">13 September 2026</time>. Platform tenure is based on the March 2022 join date. Visit Topmate for current ratings, services, availability, and pricing.</p>
     </section>
 

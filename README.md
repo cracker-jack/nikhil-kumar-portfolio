@@ -16,31 +16,44 @@ Open `http://127.0.0.1:4173/`. Stop the server with Ctrl+C.
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | Home, selected work, experience, about, Topmate mentorship, contact, resume downloads |
+| `index.html` | Home, selected work, experience, about, Topmate mentorship, LinkedIn recommendations, contact, resume downloads |
+| `explore.html` | Alternative, photo-led visual portfolio with an interactive four-project gallery |
 | `projects/billing-system.html` | Consumption Billing System |
 | `projects/reporting.html` | Consumption Reporting |
 | `projects/free-trials.html` | Free Trials and Adoption |
 | `projects/migration-assistant.html` | DLP Migration Assistant |
 | `assets/styles.css` | Shared responsive styles and print layout |
-| `assets/site.js` | Keyboard-accessible mobile navigation and progressive testimonial controls |
+| `assets/visual.css` | Self-contained styles for the visual portfolio; does not restyle the classic pages |
+| `assets/site.js` | Keyboard-accessible mobile navigation and shared progressive carousel controls |
 | `assets/favicon.svg` | Original abstract, non-letter icon |
 | `assets/social-card.svg` | Original 1200 x 630 social card |
 | `assets/social-card.png` | Browser-rasterized 1200 x 630 social sharing image |
 | `assets/resume/` | Approved, unmodified PDF and Word resume downloads |
 | `assets/images/` | User-approved portraits and Times Square image, optimized as responsive WebP and JPEG copies |
 | `.nojekyll` | Serve the site as plain static files on GitHub Pages |
-| `sitemap.xml` | The five canonical public page URLs |
+| `sitemap.xml` | The six canonical public page URLs |
 
 ## Editing
 
 - Edit page content directly in HTML. Important content and navigation remain available without JavaScript.
-- All pages share `assets/styles.css` and `assets/site.js`. Color and font variables are at the top of the stylesheet; all fonts are system fonts.
-- Header and footer markup is intentionally static. Apply navigation changes to all five pages.
+- The five classic pages share `assets/styles.css`; the visual edition uses `assets/visual.css`. All six share `assets/site.js`. Color and font variables are at the top of each stylesheet; all fonts are system fonts.
+- Header and footer markup is intentionally static. Apply shared navigation changes across the five classic pages and check the visual edition's separate navigation as well.
 - Keep links and asset paths relative so both a domain root and a project path work. Case studies use `../` for parent assets.
 - Replace resume copies in `assets/resume/` while keeping the filenames, or update the two download links in `index.html`.
 - Keep project claims scoped: reporting API capabilities are platform context, free-trial outcomes describe consumption rather than paid conversion, and migration backend work was co-owned.
 - The hero role is Software Engineer II at Microsoft. The approved downloadable resume files are distributed as supplied.
 - Navigation uses the full name. The favicon and social image do not use an initials monogram.
+
+## Visual portfolio
+
+`explore.html` is a separate visual edition, linked from the classic homepage's hero. The classic homepage and four case studies remain available. Its original design takes cues from Apple's spacious, image-led product presentation without copying Apple artwork, branding, or page content.
+
+- Large system-sans typography, mint photography, deep teal billing, blue reporting, warm apricot trials, and coral migration panels create a distinct visual rhythm.
+- The project gallery uses native horizontal scrolling and scroll snap. Project selector links and every case study remain usable without JavaScript. Progressive controls add previous/next buttons, the current project state, a counter, and Left/Right/Home/End keyboard support on the focused gallery.
+- `assets/site.js` shares carousel behavior between the classic Topmate reviews and the visual project gallery. New galleries use `data-carousel`, `data-carousel-track`, `data-carousel-slide`, `data-carousel-controls`, and `data-carousel-status`; selector links are optional `data-carousel-link` anchors to slide IDs. Existing testimonial classes remain supported.
+- There is no autoplay or scroll hijacking. A single short portrait entrance and smooth gallery movement honor reduced-motion preferences; content is visible by default.
+- The page reuses only the approved local portrait and Times Square variants, existing resume downloads, sourced career/project facts, and a complete user-supplied LinkedIn recommendation with its original date.
+- This page loads `assets/visual.css` instead of the classic stylesheet. Keep its navigation compatible with the shared script when editing.
 
 ## Portraits
 
@@ -66,6 +79,17 @@ The mentorship section is a dated, static snapshot of [Nikhil's Topmate profile]
 - Booking links go directly to the corresponding public Topmate services. Current availability and prices remain on Topmate; the site does not take bookings or payments.
 - No Topmate widgets, scripts, remote images, or tracking code are embedded.
 
+## LinkedIn recommendations
+
+The `#recommendations` section contains seven complete recommendations from LinkedIn text supplied by Nikhil on 14 September 2026. Each includes the original recommendation date in a semantic `time` element. The section links to the supplied [received recommendations page](https://www.linkedin.com/in/nikhilkr96/details/recommendations/?detailScreenTabIndex=0); LinkedIn may require sign-in.
+
+- The selection covers engineering leadership, product collaboration, staff and senior engineering perspectives, software and game development, and career mentorship. No geography is inferred from a name, company, or school.
+- Recommendation wording is preserved in full, including original grammar and punctuation. LinkedIn UI labels are excluded. Entries ending in an apparent "more" truncation marker were not selected.
+- Role labels are selected details from the supplied profile headlines, not independently verified current roles or roles at the time of recommendation. Only explicitly supplied relationships are shown.
+- The recommendations are separate from Topmate reviews and do not change Topmate counts or claim that mentorship caused a particular job placement.
+- All seven quotes are visible without JavaScript or expansion controls. The layout stacks attribution above the quote on mobile and does not clip long text.
+- Keep source exports outside the published folder. Add or revise education, licenses, or certifications only when their source details are supplied or verified.
+
 ## Publishing
 
 The configured deployment target is [cracker-jack/nikhil-kumar-portfolio](https://github.com/cracker-jack/nikhil-kumar-portfolio), using GitHub Pages from the `main` branch and repository root. No build step is needed.
@@ -74,7 +98,7 @@ The public base URL is:
 
 `https://cracker-jack.github.io/nikhil-kumar-portfolio/`
 
-All five pages have matching absolute canonical and `og:url` values. Their `og:image` points to the public `assets/social-card.png`; Person structured data points to the public home URL. `sitemap.xml` lists the same five canonical URLs.
+All six pages have matching absolute canonical and `og:url` values. Their `og:image` points to the public `assets/social-card.png`; Person structured data points to the public home URL. `sitemap.xml` lists the same six canonical URLs.
 
 If the domain or repository name changes, update those metadata values and the sitemap together. Navigation, stylesheets, scripts, favicon, and downloads use relative paths and also work at a domain root.
 

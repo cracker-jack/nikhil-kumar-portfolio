@@ -14,7 +14,6 @@ if (root) {
   const status = root.querySelector("#booking-status");
   const review = root.querySelector("[data-booking-review]");
   const note = root.querySelector("#booking-note");
-  const emailLink = root.querySelector("[data-booking-email]");
   const payLink = root.querySelector("[data-booking-pay]");
   const nameInput = root.querySelector("#booking-name");
   const emailInput = root.querySelector("#booking-email");
@@ -181,8 +180,6 @@ if (root) {
       root.querySelector("[data-review-date]").textContent = `${date}, ${slot.label} IST`;
       root.querySelector("[data-review-price]").textContent = `INR ${service.priceInr}`;
       note.value = paymentNote(service, date, slot);
-      const body = `Hi Nikhil,\r\n\r\nI would like to request this session:\r\n${note.value}\r\n\r\nPlease confirm availability before I pay.\r\n`;
-      emailLink.href = `mailto:kumarnikhil374@gmail.com?subject=${encodeURIComponent(`${service.name} session request`)}&body=${encodeURIComponent(body)}`;
       review.hidden = false;
       status.textContent = bookingApi ? "Ready for payment. The slot is still rechecked before Checkout opens." : "Preference ready to review. No slot has been reserved.";
     }
@@ -254,6 +251,12 @@ if (root) {
           },
         };
         const checkout = new window.Razorpay(options);
+        if (typeof checkout.on === "function") {
+          checkout.on("payment.failed", () => {
+            payLink.disabled = false;
+            status.textContent = "Payment failed in Razorpay. No booking was confirmed and no calendar invitation was sent.";
+          });
+        }
         checkout.open();
       } catch (error) {
         payLink.disabled = false;
@@ -279,21 +282,6 @@ if (root) {
       if (!selection) return;
       showReview(selection);
       root.querySelector("#booking-review-title").focus();
-    });
-    emailLink.addEventListener("click", async (event) => {
-      if (calendarExpired()) {
-        event.preventDefault();
-        await updateTimes({ preserveReview: true });
-        if (!review.hidden) status.textContent = "Availability refreshed. Review the session and open the link again to continue.";
-        return;
-      }
-      const selection = validateSelection();
-      if (!selection) {
-        event.preventDefault();
-        resetReview();
-        return;
-      }
-      showReview(selection);
     });
     payLink.addEventListener("click", async (event) => {
       event.preventDefault();

@@ -57,6 +57,6 @@ test("malformed dates, impossible calendar dates and unsupported durations are r
 
 test("review notes include the exact preference and fee without claiming a reservation", () => {
   const slot = selectedSlot("2026-09-14", "16:00", 30, before);
-  assert.equal(paymentNote({ name: "Mentorship", priceInr: 499 }, "2026-09-14", slot),
-    "Mentorship | 2026-09-14 | 4:00 PM - 4:30 PM IST | INR 499 | Time not confirmed");
+  assert.equal(paymentNote({ name: "Mentorship", priceInr: 1 }, "2026-09-14", slot),
+    "Mentorship | 2026-09-14 | 4:00 PM - 4:30 PM IST | INR 1 | Time not confirmed");
 });

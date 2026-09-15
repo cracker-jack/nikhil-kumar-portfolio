@@ -16,7 +16,7 @@ Confirmed by Nikhil on 14 September 2026 and stored in the immutable `APPROVED_P
 
 | Service | Duration | Price (INR) |
 | --- | --- | --- |
-| Mentorship | 30 minutes | 499 |
+| Mentorship | 30 minutes | 1 |
 | Resume review | 30 minutes | 399 |
 | HLD mock interview | 60 minutes | 999 |
 | LLD mock interview | 60 minutes | 999 |

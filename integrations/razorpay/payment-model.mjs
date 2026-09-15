@@ -9,7 +9,7 @@ export const SERVICES = Object.freeze([
 ]);
 
 export const APPROVED_PRICES_PAISE = Object.freeze({
-  mentorship: 49900,
+  mentorship: 100,
   "resume-review": 39900,
   "hld-mock": 99900,
   "lld-mock": 99900,

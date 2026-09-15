@@ -6,14 +6,14 @@ import { MemoryBookingStore, createBookingService, validateBookingIntent } from 
 
 const NOW = new Date("2026-09-15T09:00:00.000Z");
 const SERVICES = Object.freeze([
-  Object.freeze({ id: "mentorship", name: "Mentorship", durationMinutes: 30, amountPaise: 49900, currency: "INR" }),
+  Object.freeze({ id: "mentorship", name: "Mentorship", durationMinutes: 30, amountPaise: 100, currency: "INR" }),
 ]);
 const ORDER = Object.freeze({
   mode: "test", orderId: "order_BookingFixture", serviceId: "mentorship", bookingId: "bk_aaaaaaaaaaaaaaaaaaaaaaaa",
-  amountPaise: 49900, currency: "INR", receipt: "bk_aaaaaaaaaaaaaaaaaaaaaaaa",
+  amountPaise: 100, currency: "INR", receipt: "bk_aaaaaaaaaaaaaaaaaaaaaaaa",
 });
 const PAYMENT = normalizePayment({
-  entity: "payment", id: "pay_BookingFixture", order_id: ORDER.orderId, amount: 49900,
+  entity: "payment", id: "pay_BookingFixture", order_id: ORDER.orderId, amount: 100,
   currency: "INR", method: "upi", status: "captured", captured: true, amount_refunded: 0,
 });
 const slot = Object.freeze({
@@ -43,7 +43,7 @@ function fixture(overrides = {}) {
       return { ...ORDER, receipt, bookingId };
     },
     checkoutOptions(order, customer) {
-      return { key: "rzp_test_fixture", order_id: order.orderId, amount: 49900, currency: "INR", prefill: customer };
+      return { key: "rzp_test_fixture", order_id: order.orderId, amount: 100, currency: "INR", prefill: customer };
     },
     async verifyCheckout(order, body) {
       calls.verify++;
@@ -89,7 +89,7 @@ test("booking intent validates customer data, rechecks availability and returns 
   });
   assert.equal(result.booking.status, "payment_created");
   assert.equal(result.booking.customerEmail, "user@example.com");
-  assert.equal(result.checkout.amount, 49900);
+  assert.equal(result.checkout.amount, 100);
   assert.equal(calls.availability, 1);
   assert.equal(calls.orders, 1);
   assert.ok(!JSON.stringify(result).includes("secret"));
@@ -131,7 +131,7 @@ test("captured payment is flagged for manual resolution when calendar turns busy
 test("uncaptured payment does not create a calendar event", async () => {
   const { service, calls } = fixture({
     payment: normalizePayment({
-      entity: "payment", id: "pay_BookingFixture", order_id: ORDER.orderId, amount: 49900,
+      entity: "payment", id: "pay_BookingFixture", order_id: ORDER.orderId, amount: 100,
       currency: "INR", method: "upi", status: "authorized", captured: false, amount_refunded: 0,
     }),
   });

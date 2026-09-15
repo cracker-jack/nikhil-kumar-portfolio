@@ -98,7 +98,7 @@ test("real service path shares token and date requests and returns only safe pub
   assert.equal(state.calls.length, 3);
   assert.equal(short.slots.length, 14);
   assert.equal(long.slots.length, 13);
-  assert.equal(short.priceInr, 499);
+  assert.equal(short.priceInr, 1);
   assert.equal(long.priceInr, 999);
   assert.equal(short.reserved, false);
   assert.equal(short.source, "google-calendar");
@@ -173,10 +173,11 @@ async function serverFixture(t, service = { getAvailability: async () => ({ rese
   await once(server, "listening");
   t.after(() => new Promise((done) => { server.close(done); server.closeAllConnections(); }));
   const url = `http://127.0.0.1:${server.address().port}`;
-  const post = (body, headers = {}) => fetch(`${url}/api/availability`, {
+  const postPath = (path, body, headers = {}) => fetch(`${url}${path}`, {
     method: "POST", headers: { "Content-Type": "application/json", ...headers }, body,
   });
-  return { url, post };
+  const post = (body, headers = {}) => postPath("/api/availability", body, headers);
+  return { url, post, postPath };
 }
 
 test("HTTP routes, exact CORS, methods and malformed bodies are guarded", async (t) => {
@@ -233,6 +234,50 @@ test("HTTP errors never expose provider messages, and rate limits reset", async 
   assert.equal((await post("{}")).status, 400);
 });
 
+test("HTTP booking callback and webhook routes mimic gateway success and failure safely", async (t) => {
+  const calls = [];
+  const bookingService = {
+    createIntent: async (value) => {
+      calls.push(["intent", value]);
+      return { booking: { status: "payment_created" }, checkout: { order_id: "order_Offline" } };
+    },
+    confirmCheckout: async (value) => {
+      calls.push(["callback", value]);
+      if (value.razorpay_payment_id === "pay_failed") return { status: "payment_pending" };
+      return { status: "confirmed", calendarEvent: { eventLink: "https://calendar.example.invalid/event" } };
+    },
+    reconcileWebhook: async (value) => {
+      calls.push(["webhook", value]);
+      return { action: value.action };
+    },
+  };
+  const webhookVerifier = (rawBody, headers) => {
+    calls.push(["raw-webhook", rawBody.toString("utf8"), headers["x-razorpay-event-id"]]);
+    return JSON.parse(rawBody.toString("utf8"));
+  };
+  const { postPath } = await serverFixture(t, undefined, { bookingService, webhookVerifier });
+  const allowed = "https://cracker-jack.github.io";
+  const intent = await postPath("/api/bookings/intent", JSON.stringify({ serviceId: "mentorship" }), { Origin: allowed });
+  assert.equal(intent.status, 200);
+  assert.equal((await intent.json()).booking.status, "payment_created");
+  const success = await postPath("/api/payments/checkout-callback", JSON.stringify({
+    razorpay_order_id: "order_Offline", razorpay_payment_id: "pay_success", razorpay_signature: "signature",
+  }), { Origin: allowed });
+  assert.equal(success.status, 200);
+  assert.equal((await success.json()).booking.status, "confirmed");
+  const failure = await postPath("/api/payments/checkout-callback", JSON.stringify({
+    razorpay_order_id: "order_Offline", razorpay_payment_id: "pay_failed", razorpay_signature: "signature",
+  }), { Origin: allowed });
+  assert.equal(failure.status, 200);
+  assert.equal((await failure.json()).booking.status, "payment_pending");
+  const webhook = await postPath("/api/razorpay/webhook", JSON.stringify({ action: "reconciled" }), {
+    Origin: allowed, "x-razorpay-event-id": "event-offline", "x-razorpay-signature": "fictional",
+  });
+  assert.equal(webhook.status, 200);
+  assert.equal((await webhook.json()).action, "reconciled");
+  assert.deepEqual(calls.map(([name]) => name), ["intent", "callback", "callback", "raw-webhook", "webhook"]);
+});
+
 test("browser endpoint configuration ignores public query overrides and rejects unsafe configured URLs", () => {
   assert.equal(availabilityEndpoint("", "https://cracker-jack.github.io/nikhil-kumar-portfolio/?calendar=local"), "");
   assert.equal(availabilityEndpoint("", "http://127.0.0.1:4173/?calendar=local"), "http://127.0.0.1:4175/api/availability");
@@ -247,7 +292,7 @@ test("browser endpoint configuration ignores public query overrides and rejects 
 test("browser client sends only the service/date, validates slots and never accepts a reservation", async () => {
   const { service } = fixture();
   const data = await service.getAvailability(input());
-  const selection = { id: "mentorship", duration: 30, priceInr: 499 };
+  const selection = { id: "mentorship", duration: 30, priceInr: 1 };
   const request = async (body) => checkedAvailability("https://calendar.example.invalid/api/availability", selection, DAY, {
     now: () => START,
     fetchImpl: async (url, options) => {
@@ -262,7 +307,7 @@ test("browser client sends only the service/date, validates slots and never acce
   assert.equal(result.expiresAt, START + 30000);
   assert.deepEqual(result.slots, data.slots);
   for (const patch of [
-    { reserved: true }, { priceInr: 1 }, { durationMinutes: 60 }, { date: "2026-09-19" },
+    { reserved: true }, { priceInr: 2 }, { durationMinutes: 60 }, { date: "2026-09-19" },
     { serviceId: "hld-mock" }, { source: "preferred" }, { timeZone: "UTC" }, { checkedAt: null },
     { validForSeconds: 31 }, { slots: null }, { slots: [null] },
     { slots: [{ ...data.slots[0], end: data.slots[1].end }] }, { slots: [data.slots[0], data.slots[0]] },
@@ -276,7 +321,7 @@ test("browser client sends only the service/date, validates slots and never acce
 test("browser request latency cannot extend freshness and cancellation reaches fetch", async () => {
   const { service } = fixture();
   const data = await service.getAvailability(input());
-  const selection = { id: "mentorship", duration: 30, priceInr: 499 };
+  const selection = { id: "mentorship", duration: 30, priceInr: 1 };
   let clock = START;
   const result = await checkedAvailability("https://calendar.example.invalid/api/availability", selection, DAY, {
     now: () => clock,

@@ -57,5 +57,6 @@ test("browser modules use JavaScript filenames compatible with the static previe
   const browserScript = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "assets", "booking.js"), "utf8");
   assert.match(browserScript, /from "\.\/booking-slots\.js"/);
   assert.doesNotMatch(browserScript, /from ["'][^"']+\.mjs["']/);
+  assert.match(browserScript, /payment\.failed/);
   assert.match(section, /aria-describedby="booking-service-details"/);
 });

@@ -97,7 +97,7 @@ test("the default catalog contains all five approved prices and unchanged durati
     fetchImpl: () => assert.fail("Reading the catalog must not contact Razorpay."),
   });
   assert.deepEqual(api.services.map(({ id, amountPaise, durationMinutes }) => [id, amountPaise, durationMinutes]), [
-    ["mentorship", 49900, 30],
+    ["mentorship", 100, 30],
     ["resume-review", 39900, 30],
     ["hld-mock", 99900, 60],
     ["lld-mock", 99900, 60],
@@ -110,7 +110,7 @@ test("the default catalog contains all five approved prices and unchanged durati
 
 test("approved amounts flow unchanged through order creation, checkout and capture verification for every service", async () => {
   for (const [serviceId, amount] of [
-    ["mentorship", 49900], ["resume-review", 39900], ["hld-mock", 99900],
+    ["mentorship", 100], ["resume-review", 39900], ["hld-mock", 99900],
     ["lld-mock", 99900], ["dsa-mock", 69900],
   ]) {
     const receipt = `approved-${serviceId}`;
@@ -148,8 +148,8 @@ test("invalid explicit price overrides are rejected rather than replaced by appr
   const unused = () => assert.fail("Invalid configuration must not perform I/O.");
   assert.throws(() => client(unused, { pricesPaise: null }), isError("MISSING_PRICES"));
   assert.throws(() => client(unused, { pricesPaise: {} }), isError("INVALID_PRICE"));
-  assert.throws(() => client(unused, { pricesPaise: { mentorship: 49900 } }), isError("INVALID_PRICE"));
-  assert.throws(() => client(unused, { pricesPaise: { ...APPROVED_PRICES_PAISE, mentorship: "49900" } }),
+  assert.throws(() => client(unused, { pricesPaise: { mentorship: 100 } }), isError("INVALID_PRICE"));
+  assert.throws(() => client(unused, { pricesPaise: { ...APPROVED_PRICES_PAISE, mentorship: "100" } }),
     isError("INVALID_PRICE"));
 });
 

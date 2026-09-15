@@ -168,7 +168,11 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         : `Read-only calendar availability API listening on port ${port}. No booking or payment writes are enabled.`);
     });
   } catch (error) {
-    console.error(error instanceof CalendarAuthError ? `${error.code}: ${error.message}` : "Availability API configuration is invalid.");
+    if (error instanceof CalendarAuthError || error instanceof BookingError || error instanceof PaymentError) {
+      console.error(`${error.code}: ${error.message}`);
+    } else {
+      console.error("Availability API configuration is invalid.");
+    }
     process.exitCode = 1;
   }
 }

@@ -212,8 +212,8 @@ export class FirestoreBookingStore {
 
 export function createRazorpayFromEnv(env, options = {}) {
   return new RazorpayApiClient({
-    keyId: env.RAZORPAY_KEY_ID,
-    keySecret: env.RAZORPAY_KEY_SECRET,
+    keyId: env.RAZORPAY_KEY_ID?.trim(),
+    keySecret: env.RAZORPAY_KEY_SECRET?.trim(),
     cardsEnabled: env.RAZORPAY_ENABLE_CARDS === "true",
     ...options,
   });

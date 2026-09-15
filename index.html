@@ -381,7 +381,7 @@
                 <div><label for="booking-date">Preferred date</label><input id="booking-date" type="date" required></div>
                 <div><label for="booking-time">Preferred time (IST)</label><select id="booking-time" required disabled><option value="">Choose a time</option></select></div>
                 <div data-customer-field hidden><label for="booking-name">Your name</label><input id="booking-name" name="name" autocomplete="name" maxlength="80"></div>
-                <div data-customer-field hidden><label for="booking-email">Your email</label><input id="booking-email" name="email" type="email" autocomplete="email" maxlength="120"></div>
+                <div data-customer-field hidden><label for="booking-email">Your email</label><input id="booking-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" pattern="^[^\s@]+@[^\s@]+\.[^\s@]{2,}$"></div>
               </fieldset>
               <p class="booking-status" id="booking-status" role="status"></p>
               <p class="booking-notice" data-calendar-failure hidden>The calendar service is unavailable. <a href="mailto:kumarnikhil374@gmail.com?subject=Direct%20session%20enquiry">Email to arrange a session</a>; no slot has been reserved.</p>

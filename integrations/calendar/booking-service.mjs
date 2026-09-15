@@ -1,10 +1,10 @@
 import { randomBytes } from "node:crypto";
-import { selectedSlot } from "../../assets/booking-slots.js";
+import { selectedSlot, todayInIST } from "../../assets/booking-slots.js";
 import { PaymentError, applyVerifiedPayment, createPaymentState, isRecord, verifyWebhook } from "../razorpay/payment-model.mjs";
 import { RazorpayApiClient } from "../razorpay/api-client.mjs";
 import { createCalendarEvent, refreshCalendarAccess, requireEventWriteScope } from "./google-oauth.mjs";
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export class BookingError extends Error {
   constructor(code, message, status = 400) {
@@ -29,7 +29,8 @@ function cleanText(value, code, label, max = 80) {
 function cleanEmail(value) {
   fail(typeof value === "string", "invalid_email", "Email is required.");
   const email = value.trim().toLowerCase();
-  fail(email.length <= 120 && EMAIL.test(email) && !/[\r\n\0]/.test(email), "invalid_email", "Email is invalid.");
+  fail(email.length <= 120 && EMAIL.test(email) && !email.includes("..") && !/[\r\n\0]/.test(email),
+    "invalid_email", "Email is invalid.");
   return email;
 }
 
@@ -39,6 +40,7 @@ export function validateBookingIntent(input, services, now = new Date()) {
     "invalid_request", "Unexpected booking fields were supplied.");
   const service = services.find((item) => item.id === input.serviceId);
   fail(service, "invalid_service", "Choose a listed service.");
+  fail(typeof input.date === "string" && input.date >= todayInIST(now), "invalid_date", "Choose today or a future date in IST.");
   let slot;
   try {
     slot = selectedSlot(input.date, input.time, service.durationMinutes, now);
@@ -227,6 +229,7 @@ export function publicBooking(record) {
     date: record.date,
     time: record.time,
     customerEmail: record.customerEmail,
+    ...(record.resolutionReason ? { resolutionReason: record.resolutionReason } : {}),
     ...(record.calendarEvent ? { calendarEvent: { eventLink: record.calendarEvent.eventLink } } : {}),
   });
 }
@@ -279,18 +282,25 @@ export function createBookingService({
           resolutionReason: "calendar_busy_after_payment",
         });
       }
-      requireEventWriteScope(savedAuthorization.scope);
-      const tokens = await refreshCalendarAccess(calendarConfig, savedAuthorization, fetchImpl);
-      requireEventWriteScope(tokens.scope);
-      const calendarEvent = await createCalendarEvent(calendarConfig, tokens.access_token, {
-        bookingId: record.bookingId, serviceName: record.serviceName,
-        customerName: record.customerName, customerEmail: record.customerEmail,
-        start: record.slot.start, end: record.slot.end,
-      }, fetchImpl);
-      return store.update(record.bookingId, {
-        status: "confirmed", payment: { ...record.payment, ...payment }, calendarEvent,
-        confirmedAt: now().toISOString(),
-      });
+      try {
+        requireEventWriteScope(savedAuthorization.scope);
+        const tokens = await refreshCalendarAccess(calendarConfig, savedAuthorization, fetchImpl);
+        requireEventWriteScope(tokens.scope);
+        const calendarEvent = await createCalendarEvent(calendarConfig, tokens.access_token, {
+          bookingId: record.bookingId, serviceName: record.serviceName,
+          customerName: record.customerName, customerEmail: record.customerEmail,
+          start: record.slot.start, end: record.slot.end,
+        }, fetchImpl);
+        return store.update(record.bookingId, {
+          status: "confirmed", payment: { ...record.payment, ...payment }, calendarEvent,
+          confirmedAt: now().toISOString(),
+        });
+      } catch {
+        return store.update(record.bookingId, {
+          status: "paid_needs_manual_resolution", payment: { ...record.payment, ...payment },
+          resolutionReason: "calendar_invite_failed",
+        });
+      }
     });
   }
 

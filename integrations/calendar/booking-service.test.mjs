@@ -74,6 +74,7 @@ function fixture(overrides = {}) {
       if (url.endsWith("/userinfo")) return new Response(JSON.stringify({ email: "owner@example.invalid", email_verified: true }));
       calls.events++;
       assert.equal(options.method, "POST");
+      if (overrides.eventResponse) return overrides.eventResponse;
       return new Response(JSON.stringify({ kind: "calendar#event", id: "event_fixture", htmlLink: "https://calendar.example.invalid/event" }));
     },
     now: () => NOW,
@@ -99,6 +100,15 @@ test("invalid slot and customer details fail before payment order creation", asy
   assert.throws(() => validateBookingIntent({
     serviceId: "mentorship", date: "2026-09-16", time: "16:00", customerName: "A", customerEmail: "bad",
   }, SERVICES, NOW), /Name is invalid/);
+  assert.throws(() => validateBookingIntent({
+    serviceId: "mentorship", date: "2026-09-16", time: "16:00", customerName: "Nikhil Kumar", customerEmail: "bad@example",
+  }, SERVICES, NOW), /Email is invalid/);
+  assert.throws(() => validateBookingIntent({
+    serviceId: "mentorship", date: "2026-09-16", time: "16:00", customerName: "Nikhil Kumar", customerEmail: "bad..dots@example.com",
+  }, SERVICES, NOW), /Email is invalid/);
+  assert.throws(() => validateBookingIntent({
+    serviceId: "mentorship", date: "2026-09-14", time: "16:00", customerName: "Nikhil Kumar", customerEmail: "user@example.com",
+  }, SERVICES, NOW), /Choose today or a future date/);
   const { service, calls } = fixture({ slots: [] });
   await assert.rejects(service.createIntent({
     serviceId: "mentorship", date: "2026-09-16", time: "16:00", customerName: "Nikhil Kumar", customerEmail: "user@example.com",
@@ -126,6 +136,19 @@ test("captured payment is flagged for manual resolution when calendar turns busy
   const booking = await service.confirmCheckout(callback());
   assert.equal(booking.status, "paid_needs_manual_resolution");
   assert.equal(calls.events, 0);
+});
+
+test("captured payment is flagged for manual resolution when invite creation fails", async () => {
+  const { service, calls } = fixture({
+    eventResponse: new Response(JSON.stringify({ error: { message: "calendar write denied" } }), { status: 403 }),
+  });
+  await service.createIntent({
+    serviceId: "mentorship", date: "2026-09-16", time: "16:00", customerName: "Nikhil Kumar", customerEmail: "user@example.com",
+  });
+  const booking = await service.confirmCheckout(callback());
+  assert.equal(booking.status, "paid_needs_manual_resolution");
+  assert.equal(booking.resolutionReason, "calendar_invite_failed");
+  assert.equal(calls.events, 1);
 });
 
 test("uncaptured payment does not create a calendar event", async () => {

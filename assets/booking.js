@@ -3,6 +3,7 @@ import { availabilityEndpoint, checkedAvailability } from "./availability-client
 import { bookingEndpoint, confirmCheckout, createBookingIntent } from "./booking-api-client.js";
 
 const root = document.querySelector("#direct-sessions");
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 if (root) {
   const picker = root.querySelector("[data-slot-picker]");
   const fallback = root.querySelector("[data-booking-fallback]");
@@ -47,6 +48,19 @@ if (root) {
     let inFlight;
     let calendarResult;
     let razorpayScript;
+    function enforceDateFloor() {
+      const minimum = todayInIST();
+      dateInput.min = minimum;
+      if (dateInput.value && dateInput.value < minimum) {
+        dateInput.value = "";
+        timeInput.replaceChildren(new Option("Choose a time", ""));
+        timeInput.disabled = true;
+        resetReview();
+        status.textContent = "Older dates are unavailable. Choose today or a future date in IST.";
+      }
+      return minimum;
+    }
+
     if (endpoint) {
       root.querySelector("#booking-notice").textContent = bookingApi
         ? "Times are checked against my Google Calendar. Your slot is confirmed only after verified Razorpay payment and a calendar invite."
@@ -75,7 +89,7 @@ if (root) {
       const wasReviewed = preserveReview && !review.hidden;
       const reviewFocus = wasReviewed && review.contains(document.activeElement) ? document.activeElement : null;
       const previousTime = timeInput.value;
-      dateInput.min = todayInIST();
+      const minimumDate = enforceDateFloor();
       dateInput.setCustomValidity("");
       timeInput.setCustomValidity("");
       timeInput.replaceChildren(new Option("Choose a time", ""));
@@ -89,7 +103,7 @@ if (root) {
         status.textContent = "Choose a service and date to see preferred times in IST.";
         return;
       }
-      if (dateInput.value < dateInput.min) {
+      if (dateInput.value < minimumDate) {
         dateInput.setCustomValidity("Choose today or a future date in IST.");
         status.textContent = "That date has passed in IST. Choose a future date.";
         return;
@@ -146,10 +160,17 @@ if (root) {
     }
 
     function validateSelection() {
-      dateInput.min = todayInIST();
+      const minimumDate = enforceDateFloor();
       dateInput.setCustomValidity("");
       timeInput.setCustomValidity("");
       if (!form.reportValidity()) return null;
+      if (dateInput.value < minimumDate) {
+        dateInput.setCustomValidity("Choose today or a future date in IST.");
+        dateInput.reportValidity();
+        dateInput.setCustomValidity("");
+        status.textContent = "Older dates are unavailable. Choose today or a future date in IST.";
+        return null;
+      }
       const service = prices.find((item) => item.id === serviceInput.value);
       if (!service) {
         status.textContent = "Choose one of the listed services.";
@@ -194,7 +215,7 @@ if (root) {
         nameInput.setCustomValidity("");
         return null;
       }
-      if (!emailInput.validity.valid || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (!emailInput.validity.valid || !EMAIL_PATTERN.test(email)) {
         emailInput.setCustomValidity("Enter a valid email address.");
         emailInput.reportValidity();
         emailInput.setCustomValidity("");
@@ -240,7 +261,9 @@ if (root) {
               if (booking.status === "confirmed") {
                 status.textContent = "Booking confirmed. A Google Calendar invitation has been sent to your email.";
               } else if (booking.status === "paid_needs_manual_resolution") {
-                status.textContent = "Payment is verified, but the calendar invite needs manual resolution. I will follow up by email.";
+                status.textContent = booking.resolutionReason === "calendar_invite_failed"
+                  ? "Payment is verified, but Google Calendar could not send the invite. I will follow up by email."
+                  : "Payment is verified, but the slot needs manual resolution. I will follow up by email.";
               } else {
                 status.textContent = "Payment is not captured yet. No booking is confirmed until Razorpay confirms capture.";
               }
@@ -267,6 +290,8 @@ if (root) {
     }
 
     serviceInput.addEventListener("change", updateTimes);
+    dateInput.addEventListener("focus", enforceDateFloor);
+    dateInput.addEventListener("click", enforceDateFloor);
     dateInput.addEventListener("input", updateTimes);
     timeInput.addEventListener("change", () => {
       timeInput.setCustomValidity("");
@@ -332,6 +357,7 @@ if (root) {
     }
     window.addEventListener("pageshow", refreshClock);
     document.addEventListener("visibilitychange", refreshClock);
+    enforceDateFloor();
     updateTimes();
     picker.hidden = false;
     fallback.hidden = true;

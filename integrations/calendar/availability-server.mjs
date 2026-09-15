@@ -147,17 +147,23 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     const service = createAvailabilityService(config, saved);
     let bookingService;
     let webhookVerifier;
-    if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && process.env.BOOKINGS_PROJECT_ID) {
-      const razorpay = createRazorpayFromEnv(process.env);
-      const store = new FirestoreBookingStore({
-        projectId: process.env.BOOKINGS_PROJECT_ID,
-        databaseId: process.env.FIRESTORE_DATABASE_ID || "(default)",
-      });
-      bookingService = createBookingService({
-        availabilityService: service, razorpay, store, calendarConfig: config, savedAuthorization: saved,
-      });
-      if (process.env.RAZORPAY_WEBHOOK_SECRET) {
-        webhookVerifier = (rawBody, headers) => verifyRazorpayWebhookFromEnv(process.env, rawBody, headers);
+    if (process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_SECRET || process.env.BOOKINGS_PROJECT_ID) {
+      try {
+        const razorpay = createRazorpayFromEnv(process.env);
+        const store = new FirestoreBookingStore({
+          projectId: process.env.BOOKINGS_PROJECT_ID,
+          databaseId: process.env.FIRESTORE_DATABASE_ID || "(default)",
+        });
+        bookingService = createBookingService({
+          availabilityService: service, razorpay, store, calendarConfig: config, savedAuthorization: saved,
+        });
+        if (process.env.RAZORPAY_WEBHOOK_SECRET) {
+          webhookVerifier = (rawBody, headers) => verifyRazorpayWebhookFromEnv(process.env, rawBody, headers);
+        }
+      } catch (error) {
+        console.error(error instanceof BookingError || error instanceof PaymentError
+          ? `BOOKING_CONFIGURATION_DISABLED: ${error.code}`
+          : "BOOKING_CONFIGURATION_DISABLED: UNKNOWN_ERROR");
       }
     }
     const server = createAvailabilityServer(service, { ...(origins ? { allowedOrigins: origins } : {}), bookingService, webhookVerifier });

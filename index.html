@@ -21,6 +21,7 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/styles.css">
   <script src="assets/site.js" defer></script>
+  <script type="module" src="assets/booking.js"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -238,7 +239,7 @@
 
     <section class="section section-bordered container" id="mentorship" aria-labelledby="mentorship-title">
       <div class="section-heading">
-        <div><p class="eyebrow">04 / Mentorship on Topmate</p><h2 id="mentorship-title">Your next step.<br>A little more clarity.</h2></div>
+        <div><p class="eyebrow">04 / Mentorship</p><h2 id="mentorship-title">Your next step.<br>A little more clarity.</h2></div>
         <p class="section-intro">Practical guidance for students and early-career professionals moving into software engineering or finding their next direction.</p>
       </div>
       <div class="mentorship-overview">
@@ -246,6 +247,7 @@
           <p class="lead">You don&rsquo;t have to figure it all out on your own.</p>
           <p>I actively mentor on Topmate, helping people work through career decisions, prepare for interviews, and approach their next opportunity with more confidence.</p>
           <div class="actions"><a class="button button-primary" href="https://topmate.io/nikhil_kr/12607">Book 1:1 mentorship <span aria-hidden="true">&#8599;</span></a><a class="mentorship-profile" href="https://topmate.io/nikhil_kr">View my Topmate profile <span aria-hidden="true">&#8599;</span></a></div>
+          <p class="direct-session-intro">Prefer to arrange a session directly? <a href="#direct-sessions">View sessions and fees</a>.</p>
         </div>
         <dl class="mentorship-stats" aria-label="Topmate profile snapshot, 13 September 2026">
           <div><dt>5<span class="stat-unit">/5</span></dt><dd>average rating from<br><strong>92 ratings</strong></dd></div>
@@ -352,6 +354,64 @@
         </div>
       </section>
       <p class="source-note mentorship-source">Selected testimonial excerpts and profile figures from <a href="https://topmate.io/nikhil_kr">Topmate</a>, checked <time datetime="2026-09-13">13 September 2026</time>. Platform tenure is based on the March 2022 join date. Visit Topmate for current ratings, services, availability, and pricing.</p>
+      <section class="direct-sessions" id="direct-sessions" aria-labelledby="direct-sessions-title">
+        <div class="direct-sessions-copy">
+          <p class="eyebrow">Arrange a direct session</p>
+          <h3 id="direct-sessions-title">Focused time.<br>Practical feedback.</h3>
+          <p>Choose a session, then email me with your preferred dates and times. We&rsquo;ll agree a slot before you pay.</p>
+          <p class="direct-availability">Usual availability in IST: weekdays 4&ndash;11 PM; weekends 11 AM&ndash;11 PM. Sessions finish by 11 PM. Availability is confirmed by email.</p>
+        </div>
+        <div>
+          <dl class="direct-session-prices" aria-label="Direct session prices in Indian rupees">
+            <div data-service-id="mentorship"><dt>Mentorship<span>30 minutes</span></dt><dd><data value="499">&#8377;499</data></dd></div>
+            <div data-service-id="resume-review"><dt>Resume review<span>30 minutes</span></dt><dd><data value="399">&#8377;399</data></dd></div>
+            <div data-service-id="hld-mock"><dt>HLD mock interview<span>60 minutes</span></dt><dd><data value="999">&#8377;999</data></dd></div>
+            <div data-service-id="lld-mock"><dt>LLD mock interview<span>60 minutes</span></dt><dd><data value="999">&#8377;999</data></dd></div>
+            <div data-service-id="dsa-mock"><dt>Coding / DSA mock interview<span>60 minutes</span></dt><dd><data value="699">&#8377;699</data></dd></div>
+          </dl>
+          <p class="direct-rates-note">These fees apply to direct sessions. Topmate bookings follow the pricing shown on Topmate.</p>
+        </div>
+        <div class="direct-payment-actions">
+          <div data-slot-picker hidden>
+            <p class="booking-notice" id="booking-notice"><strong>Choose a preferred time, not a confirmed booking.</strong> These times follow my usual hours; live Google Calendar availability is not connected. Please agree the slot with me before paying.</p>
+            <form data-booking-form aria-describedby="booking-notice">
+              <fieldset class="booking-fields">
+                <legend>Your session preference</legend>
+                <div><label for="booking-service">Session</label><select id="booking-service" required aria-describedby="booking-service-details"><option value="">Choose a session</option></select><p class="booking-service-details" id="booking-service-details" role="status"></p></div>
+                <div><label for="booking-date">Preferred date</label><input id="booking-date" type="date" required></div>
+                <div><label for="booking-time">Preferred time (IST)</label><select id="booking-time" required disabled><option value="">Choose a time</option></select></div>
+              </fieldset>
+              <p class="booking-status" id="booking-status" role="status"></p>
+              <button class="button button-primary" type="submit">Review session &amp; payment <span aria-hidden="true">&#8594;</span></button>
+            </form>
+            <div class="booking-review" data-booking-review hidden>
+              <h4 id="booking-review-title" tabindex="-1">Your preferred session</h4>
+              <dl class="booking-summary">
+                <div><dt>Session</dt><dd data-review-service></dd></div>
+                <div><dt>Preferred time</dt><dd data-review-date></dd></div>
+                <div><dt>Session fee</dt><dd data-review-price></dd></div>
+              </dl>
+              <label for="booking-note">Suggested Razorpay note &mdash; copy and paste on the payment page</label>
+              <textarea id="booking-note" rows="3" readonly></textarea>
+              <button class="button button-secondary" type="button" data-copy-booking-note>Copy payment note</button>
+              <p class="booking-status" id="booking-copy-status" role="status"></p>
+              <div class="actions">
+                <a class="button button-secondary" href="mailto:kumarnikhil374@gmail.com?subject=Direct%20session%20enquiry" data-booking-email>Email this session request <span aria-hidden="true">&#8599;</span></a>
+                <a class="button button-primary" href="https://razorpay.me/@nikhilkumar7447" target="_blank" rel="noopener noreferrer" aria-describedby="direct-payment-note booking-transfer-note" data-booking-pay>Open Razorpay <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens a new tab)</span></a>
+              </div>
+              <p class="booking-transfer-note" id="booking-transfer-note">Your selection is not sent to Razorpay automatically. Enter the session fee and paste the note there. This page does not receive payment confirmation.</p>
+            </div>
+          </div>
+          <div data-booking-fallback>
+            <p>Arrange your preferred date and time by email before paying.</p>
+            <div class="actions">
+              <a class="button button-primary" href="mailto:kumarnikhil374@gmail.com?subject=Direct%20session%20enquiry">1. Arrange by email <span aria-hidden="true">&#8599;</span></a>
+              <a class="button button-secondary" href="https://razorpay.me/@nikhilkumar7447" aria-describedby="direct-payment-note">2. Pay on Razorpay <span aria-hidden="true">&#8599;</span></a>
+            </div>
+          </div>
+          <p class="direct-payment-note" id="direct-payment-note"><strong>Pay only after we have agreed a slot.</strong> On Razorpay, enter the listed session fee and add the service name as your note. Payment does not automatically reserve a slot or send a calendar invitation.</p>
+        </div>
+      </section>
     </section>
 
     <section class="section section-bordered container recommendations" id="recommendations" aria-labelledby="recommendations-title">

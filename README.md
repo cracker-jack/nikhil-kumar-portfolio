@@ -1,6 +1,6 @@
 # Nikhil Kumar - personal portfolio
 
-A dependency-free, static portfolio. Plain HTML, CSS, and a small progressive-enhancement script; no build step, package installation, trackers, cookies, or backend.
+A dependency-free, static portfolio. Plain HTML, CSS, and progressive-enhancement scripts; no build step, package installation, trackers, cookies, or hosted backend.
 
 ## Run locally
 
@@ -25,6 +25,7 @@ Open `http://127.0.0.1:4173/`. Stop the server with Ctrl+C.
 | `assets/styles.css` | Shared responsive styles and print layout |
 | `assets/visual.css` | Self-contained styles for the visual portfolio; does not restyle the classic pages |
 | `assets/site.js` | Keyboard-accessible mobile navigation and shared progressive carousel controls |
+| `assets/booking.js`, `assets/booking-slots.js` | Preferred date/time selection, review and hosted-payment handoff; not live calendar availability |
 | `assets/favicon.svg` | Original abstract, non-letter icon |
 | `assets/social-card.svg` | Original 1200 x 630 social card |
 | `assets/social-card.png` | Browser-rasterized 1200 x 630 social sharing image |
@@ -68,7 +69,7 @@ The Times Square highlight uses the separately supplied billboard image in 480-,
 
 ## Mentorship content
 
-The mentorship section is a dated, static snapshot of [Nikhil's Topmate profile](https://topmate.io/nikhil_kr), checked on 13 September 2026: 5/5 from 92 ratings, 173 bookings, 85 testimonials, and nine displayed earned badges.
+The Topmate portion of the mentorship section is a dated, static snapshot of [Nikhil's Topmate profile](https://topmate.io/nikhil_kr), checked on 13 September 2026: 5/5 from 92 ratings, 173 bookings, 85 testimonials, and nine displayed earned badges.
 
 - "4+ years on Topmate" refers to the platform join date, 24 March 2022, not a separate claim of continuous mentoring duration. It is distinct from software engineering experience.
 - The carousel contains ten distinct, short, attributed excerpts of actual public reviews, with their original review year. Year-only attribution avoids timezone-dependent month boundaries. Do not paraphrase inside quotation marks or imply guaranteed job outcomes.
@@ -76,8 +77,22 @@ The mentorship section is a dated, static snapshot of [Nikhil's Topmate profile]
 - When changing the selection, update the ten-voice introduction and each slide's accessible index/count. Keep each review distinct; never duplicate slides to increase the apparent count. The JavaScript counter derives its total from the actual cards.
 - Badge names are platform-awarded distinctions, not current ranking guarantees or independent certifications.
 - Update counts and the visible snapshot date together when refreshing the source. Ratings and written testimonials are different counts; bookings are not a unique-mentee count.
-- Booking links go directly to the corresponding public Topmate services. Current availability and prices remain on Topmate; the site does not take bookings or payments.
+- The existing Topmate booking links still go directly to the corresponding services. Their availability and pricing remain on Topmate, separate from the direct-session option below.
 - No Topmate widgets, scripts, remote images, or tracking code are embedded.
+
+## Direct sessions and hosted payments
+
+The classic homepage's `#direct-sessions` block lists the five user-approved session prices and durations. With JavaScript, it offers service/date/time selection, a review step, a prefilled email request and the user-supplied [Razorpay payment page](https://razorpay.me/@nikhilkumar7447). Without JavaScript, the original email-first/payment links remain available.
+
+- The form collects a local session preference only. It does not submit a booking to a server, store personal information or query Google. The payment action is a plain outbound link, not an embedded gateway, API checkout, payment-verification service or automatic calendar integration. It needs no API credentials in the portfolio.
+- The page tells customers to agree a slot by email first, then enter the listed fee and service name on Razorpay. Payment alone does not automatically reserve a slot or send a calendar invitation.
+- Prices are mentorship INR 499 / 30 minutes, resume review INR 399 / 30 minutes, HLD and LLD mocks INR 999 each / 60 minutes, and coding/DSA mock INR 699 / 60 minutes. These are direct-session fees, not assertions about Topmate prices.
+- Update the five service rows in `index.html` together when changing prices or durations. The picker reads those rows instead of maintaining a separate browser price list.
+- The picker uses IST rather than the visitor's device timezone. It offers future-only, 30-minute-grid preferences during weekdays 16:00-23:00 and weekends 11:00-23:00, with every session finishing by 23:00. These are usual working hours, not checked calendar availability or reserved slots.
+- Changing the selection clears the old review. Email/payment actions revalidate time before navigation. The Razorpay link opens in a new tab; the customer must manually enter the fee and paste the suggested note because the generic link does not transfer the selected date/time.
+- The hosted page controls its payment methods and terms. Do not claim that this generic link enforces UPI-only checkout, fixes the amount, binds a payment to a session, or signals successful payment back to this website. Do not invent prefill parameters or treat a redirect as proof of payment.
+- Browser modules use `.js` filenames for compatibility with static servers. No JavaScript or a failed module load leaves the email-first/payment fallback usable.
+- Live calendar availability, automatic reservations, payment verification and calendar invitations are not part of this static release.
 
 ## LinkedIn recommendations
 

@@ -1,5 +1,6 @@
 import { paymentNote, preferredSlots, selectedSlot, todayInIST } from "./booking-slots.js";
 import { availabilityEndpoint, checkedAvailability } from "./availability-client.js";
+import { bookingEndpoint, confirmCheckout, createBookingIntent } from "./booking-api-client.js";
 
 const root = document.querySelector("#direct-sessions");
 if (root) {
@@ -15,13 +16,18 @@ if (root) {
   const note = root.querySelector("#booking-note");
   const emailLink = root.querySelector("[data-booking-email]");
   const payLink = root.querySelector("[data-booking-pay]");
+  const nameInput = root.querySelector("#booking-name");
+  const emailInput = root.querySelector("#booking-email");
+  const customerFields = root.querySelectorAll("[data-customer-field]");
   const copyButton = root.querySelector("[data-copy-booking-note]");
   const copyStatus = root.querySelector("#booking-copy-status");
   const calendarFailure = root.querySelector("[data-calendar-failure]");
   let endpoint = "";
+  let bookingApi = "";
   let configurationError = false;
   try {
     endpoint = availabilityEndpoint(root.dataset.availabilityApi, location.href);
+    bookingApi = bookingEndpoint(root.dataset.bookingApi, location.href);
   } catch {
     configurationError = true;
     console.error("The calendar endpoint configuration is invalid; use the email-first fallback.");
@@ -41,8 +47,16 @@ if (root) {
     let serial = 0;
     let inFlight;
     let calendarResult;
+    let razorpayScript;
     if (endpoint) {
-      root.querySelector("#booking-notice").textContent = "Times are checked against my Google Calendar. Selecting a time does not reserve it or confirm a booking. Please agree the slot with me before paying.";
+      root.querySelector("#booking-notice").textContent = bookingApi
+        ? "Times are checked against my Google Calendar. Your slot is confirmed only after verified Razorpay payment and a calendar invite."
+        : "Times are checked against my Google Calendar. Selecting a time does not reserve it or confirm a booking. Please agree the slot with me before paying.";
+    }
+    if (bookingApi) {
+      for (const field of customerFields) field.hidden = false;
+      nameInput.required = true;
+      emailInput.required = true;
     }
     for (const service of prices) {
       const optionName = service.id === "dsa-mock" ? "Coding / DSA interview" : service.name;
@@ -170,7 +184,83 @@ if (root) {
       const body = `Hi Nikhil,\r\n\r\nI would like to request this session:\r\n${note.value}\r\n\r\nPlease confirm availability before I pay.\r\n`;
       emailLink.href = `mailto:kumarnikhil374@gmail.com?subject=${encodeURIComponent(`${service.name} session request`)}&body=${encodeURIComponent(body)}`;
       review.hidden = false;
-      status.textContent = "Preference ready to review. No slot has been reserved.";
+      status.textContent = bookingApi ? "Ready for payment. The slot is still rechecked before Checkout opens." : "Preference ready to review. No slot has been reserved.";
+    }
+
+    function customerDetails() {
+      if (!bookingApi) return {};
+      const name = nameInput.value.trim().replace(/\s+/g, " ");
+      const email = emailInput.value.trim().toLowerCase();
+      if (name.length < 2) {
+        nameInput.setCustomValidity("Enter your name.");
+        nameInput.reportValidity();
+        nameInput.setCustomValidity("");
+        return null;
+      }
+      if (!emailInput.validity.valid || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailInput.setCustomValidity("Enter a valid email address.");
+        emailInput.reportValidity();
+        emailInput.setCustomValidity("");
+        return null;
+      }
+      return { name, email };
+    }
+
+    function loadRazorpay() {
+      if (window.Razorpay) return Promise.resolve();
+      if (razorpayScript) return razorpayScript;
+      razorpayScript = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error("Razorpay Checkout could not be loaded."));
+        document.head.append(script);
+      });
+      return razorpayScript;
+    }
+
+    async function startCheckout(selection, customer) {
+      payLink.disabled = true;
+      status.textContent = "Creating a secure Razorpay order...";
+      try {
+        const intent = await createBookingIntent(bookingApi, selection, customer);
+        await loadRazorpay();
+        status.textContent = "Complete payment in Razorpay Checkout.";
+        const options = {
+          ...intent.checkout,
+          modal: {
+            ondismiss() {
+              payLink.disabled = false;
+              status.textContent = "Payment was not completed. No booking was confirmed.";
+            },
+          },
+          handler: async (response) => {
+            status.textContent = "Verifying payment and creating your calendar invitation...";
+            try {
+              const booking = await confirmCheckout(bookingApi, response);
+              payLink.disabled = false;
+              if (booking.status === "confirmed") {
+                status.textContent = "Booking confirmed. A Google Calendar invitation has been sent to your email.";
+              } else if (booking.status === "paid_needs_manual_resolution") {
+                status.textContent = "Payment is verified, but the calendar invite needs manual resolution. I will follow up by email.";
+              } else {
+                status.textContent = "Payment is not captured yet. No booking is confirmed until Razorpay confirms capture.";
+              }
+            } catch {
+              payLink.disabled = false;
+              status.textContent = "Payment verification could not be completed here. If Razorpay charged you, I will reconcile it manually.";
+            }
+          },
+        };
+        const checkout = new window.Razorpay(options);
+        checkout.open();
+      } catch (error) {
+        payLink.disabled = false;
+        status.textContent = error?.code === "slot_unavailable"
+          ? "That time is no longer available. Choose another slot."
+          : "Could not create a payment order. Please try again or email me.";
+      }
     }
 
     serviceInput.addEventListener("change", updateTimes);
@@ -190,23 +280,38 @@ if (root) {
       showReview(selection);
       root.querySelector("#booking-review-title").focus();
     });
-    for (const link of [emailLink, payLink]) {
-      link.addEventListener("click", async (event) => {
-        if (calendarExpired()) {
-          event.preventDefault();
-          await updateTimes({ preserveReview: true });
-          if (!review.hidden) status.textContent = "Availability refreshed. Review the session and open the link again to continue.";
-          return;
-        }
-        const selection = validateSelection();
-        if (!selection) {
-          event.preventDefault();
-          resetReview();
-          return;
-        }
-        showReview(selection);
-      });
-    }
+    emailLink.addEventListener("click", async (event) => {
+      if (calendarExpired()) {
+        event.preventDefault();
+        await updateTimes({ preserveReview: true });
+        if (!review.hidden) status.textContent = "Availability refreshed. Review the session and open the link again to continue.";
+        return;
+      }
+      const selection = validateSelection();
+      if (!selection) {
+        event.preventDefault();
+        resetReview();
+        return;
+      }
+      showReview(selection);
+    });
+    payLink.addEventListener("click", async (event) => {
+      event.preventDefault();
+      if (calendarExpired()) {
+        await updateTimes({ preserveReview: true });
+        if (!review.hidden) status.textContent = "Availability refreshed. Review the session and pay again to continue.";
+        return;
+      }
+      const selection = validateSelection();
+      if (!selection) {
+        resetReview();
+        return;
+      }
+      showReview(selection);
+      const customer = customerDetails();
+      if (bookingApi && customer) await startCheckout(selection, customer);
+      else if (!bookingApi) window.open("https://razorpay.me/@nikhilkumar7447", "_blank", "noopener,noreferrer");
+    });
     copyButton.addEventListener("click", async () => {
       if (calendarExpired()) {
         await updateTimes({ preserveReview: true });

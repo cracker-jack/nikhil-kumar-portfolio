@@ -354,12 +354,12 @@
         </div>
       </section>
       <p class="source-note mentorship-source">Selected testimonial excerpts and profile figures from <a href="https://topmate.io/nikhil_kr">Topmate</a>, checked <time datetime="2026-09-13">13 September 2026</time>. Platform tenure is based on the March 2022 join date. Visit Topmate for current ratings, services, availability, and pricing.</p>
-      <section class="direct-sessions" id="direct-sessions" aria-labelledby="direct-sessions-title" data-availability-api="https://nikhil-bookings-api-otzn3ne7rq-el.a.run.app/api/availability">
+      <section class="direct-sessions" id="direct-sessions" aria-labelledby="direct-sessions-title" data-availability-api="https://nikhil-bookings-api-otzn3ne7rq-el.a.run.app/api/availability" data-booking-api="https://nikhil-bookings-api-otzn3ne7rq-el.a.run.app">
         <div class="direct-sessions-copy">
           <p class="eyebrow">Arrange a direct session</p>
           <h3 id="direct-sessions-title">Focused time.<br>Practical feedback.</h3>
-          <p>Choose a session, then email me with your preferred dates and times. We&rsquo;ll agree a slot before you pay.</p>
-          <p class="direct-availability">Usual availability in IST: weekdays 4&ndash;11 PM; weekends 11 AM&ndash;11 PM. Sessions finish by 11 PM. Availability is confirmed by email.</p>
+          <p>Choose a session, confirm a calendar-free slot, then pay securely through Razorpay Checkout.</p>
+          <p class="direct-availability">Usual availability in IST: weekdays 4&ndash;11 PM; weekends 11 AM&ndash;11 PM. Sessions finish by 11 PM. Confirmed payments receive a Google Calendar invitation by email.</p>
         </div>
         <div>
           <dl class="direct-session-prices" aria-label="Direct session prices in Indian rupees">
@@ -380,6 +380,8 @@
                 <div><label for="booking-service">Session</label><select id="booking-service" required aria-describedby="booking-service-details"><option value="">Choose a session</option></select><p class="booking-service-details" id="booking-service-details" role="status"></p></div>
                 <div><label for="booking-date">Preferred date</label><input id="booking-date" type="date" required></div>
                 <div><label for="booking-time">Preferred time (IST)</label><select id="booking-time" required disabled><option value="">Choose a time</option></select></div>
+                <div data-customer-field hidden><label for="booking-name">Your name</label><input id="booking-name" name="name" autocomplete="name" maxlength="80"></div>
+                <div data-customer-field hidden><label for="booking-email">Your email</label><input id="booking-email" name="email" type="email" autocomplete="email" maxlength="120"></div>
               </fieldset>
               <p class="booking-status" id="booking-status" role="status"></p>
               <p class="booking-notice" data-calendar-failure hidden>The calendar service is unavailable. <a href="mailto:kumarnikhil374@gmail.com?subject=Direct%20session%20enquiry">Email to arrange a session</a>; no slot has been reserved.</p>
@@ -392,15 +394,15 @@
                 <div><dt>Preferred time</dt><dd data-review-date></dd></div>
                 <div><dt>Session fee</dt><dd data-review-price></dd></div>
               </dl>
-              <label for="booking-note">Suggested Razorpay note &mdash; copy and paste on the payment page</label>
+              <label for="booking-note">Booking note</label>
               <textarea id="booking-note" rows="3" readonly></textarea>
               <button class="button button-secondary" type="button" data-copy-booking-note>Copy payment note</button>
               <p class="booking-status" id="booking-copy-status" role="status"></p>
               <div class="actions">
                 <a class="button button-secondary" href="mailto:kumarnikhil374@gmail.com?subject=Direct%20session%20enquiry" data-booking-email>Email this session request <span aria-hidden="true">&#8599;</span></a>
-                <a class="button button-primary" href="https://razorpay.me/@nikhilkumar7447" target="_blank" rel="noopener noreferrer" aria-describedby="direct-payment-note booking-transfer-note" data-booking-pay>Open Razorpay <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens a new tab)</span></a>
+                <button class="button button-primary" type="button" aria-describedby="direct-payment-note booking-transfer-note" data-booking-pay>Pay with Razorpay <span aria-hidden="true">&#8594;</span></button>
               </div>
-              <p class="booking-transfer-note" id="booking-transfer-note">Your selection is not sent to Razorpay automatically. Enter the session fee and paste the note there. This page does not receive payment confirmation.</p>
+              <p class="booking-transfer-note" id="booking-transfer-note">Payment opens Razorpay Checkout. After a verified captured payment, a Google Calendar invitation is sent to the email above. If confirmation cannot be completed automatically, the paid booking is flagged for manual resolution.</p>
             </div>
           </div>
           <div data-booking-fallback>
@@ -410,7 +412,7 @@
               <a class="button button-secondary" href="https://razorpay.me/@nikhilkumar7447" aria-describedby="direct-payment-note">2. Pay on Razorpay <span aria-hidden="true">&#8599;</span></a>
             </div>
           </div>
-          <p class="direct-payment-note" id="direct-payment-note"><strong>Pay only after we have agreed a slot.</strong> On Razorpay, enter the listed session fee and add the service name as your note. Payment does not automatically reserve a slot or send a calendar invitation.</p>
+          <p class="direct-payment-note" id="direct-payment-note"><strong>Booking is confirmed only after verified payment.</strong> The backend rechecks availability before payment and again before sending the calendar invitation.</p>
         </div>
       </section>
     </section>

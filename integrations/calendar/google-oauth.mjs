@@ -6,7 +6,8 @@ import { fileURLToPath } from "node:url";
 
 export const REDIRECT_URI = "http://127.0.0.1:4174/oauth/google/callback";
 export const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events.freebusy";
-export const SCOPES = Object.freeze(["openid", "email", CALENDAR_SCOPE]);
+export const CALENDAR_EVENTS_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+export const SCOPES = Object.freeze(["openid", "email", CALENDAR_SCOPE, CALENDAR_EVENTS_SCOPE]);
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const PRIMARY_CALENDAR = "primary";
 
@@ -139,6 +140,11 @@ function validateAccessToken(tokens) {
     "CALENDAR_SCOPE_MISSING", "Calendar availability permission was not granted. Review the requested scope and reconnect.");
 }
 
+export function requireEventWriteScope(scope) {
+  requireValue(typeof scope === "string" && scope.split(/\s+/).includes(CALENDAR_EVENTS_SCOPE),
+    "CALENDAR_EVENTS_SCOPE_MISSING", "Calendar event permission was not granted. Reconnect Google before confirming paid bookings.");
+}
+
 export async function exchangeAuthorization(config, code, verifier, fetchImpl = globalThis.fetch) {
   const tokens = await googleJson("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -200,6 +206,35 @@ export async function readCalendarBusy(config, accessToken, timeMin, timeMax, fe
     busy.push(...calendar.busy);
   }
   return busy;
+}
+
+export async function createCalendarEvent(config, accessToken, {
+  bookingId, serviceName, customerName, customerEmail, start, end,
+}, fetchImpl = globalThis.fetch) {
+  requireValue(typeof bookingId === "string" && /^bk_[a-f0-9]{24}$/.test(bookingId)
+    && nonblank(serviceName) && serviceName.length <= 80
+    && nonblank(customerName) && customerName.length <= 80
+    && nonblank(customerEmail) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)
+    && nonblank(start) && nonblank(end),
+  "INVALID_EVENT_REQUEST", "A complete booking is required to create a calendar invitation.");
+  const data = await googleJson(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(config.calendarId)}/events?sendUpdates=all`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      summary: `${serviceName} with ${customerName}`,
+      description: `Paid direct session booking.\nBooking ID: ${bookingId}\nCustomer: ${customerName} <${customerEmail}>`,
+      start: { dateTime: start, timeZone: "Asia/Kolkata" },
+      end: { dateTime: end, timeZone: "Asia/Kolkata" },
+      attendees: [{ email: customerEmail, displayName: customerName }],
+      guestsCanInviteOthers: false,
+      guestsCanModify: false,
+      guestsCanSeeOtherGuests: false,
+      extendedProperties: { private: { booking_id: bookingId } },
+    }),
+  }, fetchImpl);
+  requireValue(data.kind === "calendar#event" && nonblank(data.id) && nonblank(data.htmlLink),
+    "EVENT_CREATE_FAILED", "Google did not return a valid created event.");
+  return Object.freeze({ eventId: data.id, eventLink: data.htmlLink });
 }
 
 export async function probeCalendar(config, accessToken, fetchImpl = globalThis.fetch, now = new Date()) {

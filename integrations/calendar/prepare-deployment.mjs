@@ -19,8 +19,10 @@ const sources = [
   ["integrations/calendar/Dockerfile", "Dockerfile"],
   ["assets/booking-slots.js", "assets/booking-slots.js"],
   ["integrations/razorpay/payment-model.mjs", "integrations/razorpay/payment-model.mjs"],
+  ["integrations/razorpay/api-client.mjs", "integrations/razorpay/api-client.mjs"],
   ["integrations/calendar/google-oauth.mjs", "integrations/calendar/google-oauth.mjs"],
   ["integrations/calendar/availability.mjs", "integrations/calendar/availability.mjs"],
+  ["integrations/calendar/booking-service.mjs", "integrations/calendar/booking-service.mjs"],
   ["integrations/calendar/availability-server.mjs", "integrations/calendar/availability-server.mjs"],
 ];
 for (const [source, destination] of sources) {
@@ -28,4 +30,4 @@ for (const [source, destination] of sources) {
   mkdirSync(dirname(target), { recursive: true });
   copyFileSync(resolve(root, ...source.split("/")), target);
 }
-console.log("Prepared an allowlisted six-file backend source bundle. No credentials or website content were included.");
+console.log(`Prepared an allowlisted ${sources.length}-file backend source bundle. No credentials or website content were included.`);

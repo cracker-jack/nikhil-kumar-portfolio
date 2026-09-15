@@ -56,7 +56,7 @@ export function createPriceBook(pricesPaise) {
 }
 
 export function validateOrderSnapshot(order) {
-  requireValue(isRecord(order) && order.mode === "test" && validId(order.orderId, "order")
+  requireValue(isRecord(order) && ["test", "live"].includes(order.mode) && validId(order.orderId, "order")
     && SERVICES.some((service) => service.id === order.serviceId)
     && validAmount(order.amountPaise, 100) && order.currency === "INR"
     && typeof order.receipt === "string" && order.receipt.length > 0 && order.receipt.length <= 40,
@@ -114,7 +114,7 @@ export function normalizePayment(payment) {
 export function createPaymentState(order) {
   validateOrderSnapshot(order);
   return Object.freeze({
-    mode: "test", orderId: order.orderId, amountPaise: order.amountPaise, currency: order.currency,
+    mode: order.mode, orderId: order.orderId, amountPaise: order.amountPaise, currency: order.currency,
     paymentId: null, status: "created", captured: false, refundedPaise: 0,
   });
 }
@@ -122,7 +122,7 @@ export function createPaymentState(order) {
 // Call only with a server-verified API or signed-webhook snapshot, never browser JSON.
 export function applyVerifiedPayment(current, payment, { cardsEnabled = false } = {}) {
   requireValue(typeof cardsEnabled === "boolean", "INVALID_CONFIGURATION", "Provide an explicit card flag.");
-  requireValue(isRecord(current) && current.mode === "test" && isRecord(payment)
+  requireValue(isRecord(current) && ["test", "live"].includes(current.mode) && isRecord(payment)
     && validId(current.orderId, "order") && validAmount(current.amountPaise, 100) && current.currency === "INR"
     && ["created", "authorized", "failed", "captured", "partially_refunded", "refunded"].includes(current.status)
     && payment.orderId === current.orderId && payment.amountPaise === current.amountPaise

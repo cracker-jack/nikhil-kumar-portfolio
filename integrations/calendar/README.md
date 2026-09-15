@@ -1,10 +1,10 @@
 # Calendar availability and session preferences
 
-The classic homepage offers a **session preference picker**, with optional read-only Google Calendar availability. With no configured backend URL it retains the original working-hours-only mode. A connected backend removes overlapping busy times from the configured session calendar; neither mode reserves a time. Customers must agree the slot before paying. No payment, appointment or invitation is created by selecting a time.
+The homepage offers a **direct-session picker**. With only the availability backend configured, it removes overlapping busy times from Google Calendar and still treats the selection as a preference. With booking runtime configuration enabled, the same picker collects the customer's name/email, creates a server-priced Razorpay Checkout order, verifies captured payment server-side, rechecks Calendar, then creates a Google Calendar event with the customer as an attendee so Google sends the confirmation invite.
 
 `assets/booking-slots.js` supplies future-only, 30-minute-grid preferences in `Asia/Kolkata`: weekdays 16:00-23:00 and weekends 11:00-23:00. The selected 30/60-minute session must finish by 23:00. It does not query Google or invent free/busy data. `assets/booking.js` enhances the homepage with validation, review, a copyable payment note and a prefilled email request. Browser modules use `.js` because some Windows static servers serve `.mjs` as `text/plain`. No JavaScript, or a failed module load, leaves the original email/payment links available.
 
-The hosted Razorpay URL is unchanged and opens in a new tab from the review step. It does not receive the selection automatically: the customer enters the fee and pastes the suggested note. Following the link is not proof of payment.
+The hosted Razorpay.me URL remains only as the no-JavaScript/email-first fallback. Automatic confirmation uses Razorpay Standard Checkout orders created by the backend; the browser receives only the Key ID, order ID, amount, service metadata and prefill fields. The Key Secret, webhook secret, customer booking record and Google authorization stay server-side.
 
 ## Where credentials belong
 
@@ -19,9 +19,14 @@ The prepared private file has these fields:
 
 | Variable | Source / use |
 | --- | --- |
-| `RAZORPAY_KEY_ID` | Actual Test Mode Key ID, if using the API core later; leave blank for hosted-link-only use |
-| `RAZORPAY_KEY_SECRET` | Matching Test Mode secret; never a browser value |
-| `RAZORPAY_WEBHOOK_SECRET` | Separate signing secret for a future webhook endpoint; currently unused |
+| `RAZORPAY_KEY_ID` | Razorpay Standard Checkout Key ID; this is the only Razorpay credential that can reach the browser inside Checkout options |
+| `RAZORPAY_KEY_SECRET` | Matching Razorpay Key Secret; never a browser value |
+| `RAZORPAY_WEBHOOK_SECRET` | Separate signing secret for the optional `/api/razorpay/webhook` endpoint |
+| `RAZORPAY_OLD_WEBHOOK_SECRET` | Optional previous webhook secret retained during webhook-secret rotation |
+| `RAZORPAY_ACCOUNT_ID` | Optional merchant account ID guard for signed webhook payloads |
+| `RAZORPAY_ENABLE_CARDS` | Set exactly `true` to enable cards; otherwise Checkout is UPI-focused |
+| `BOOKINGS_PROJECT_ID` | Google Cloud project that owns the Firestore booking records, for example `portfolio-bookings` |
+| `FIRESTORE_DATABASE_ID` | Optional Firestore database ID; defaults to `(default)` |
 | `GOOGLE_CLIENT_ID` | Google OAuth Web application client ID |
 | `GOOGLE_CLIENT_SECRET` | The same client's secret |
 | `GOOGLE_OWNER_EMAIL` | The account that owns the booking calendar |
@@ -38,7 +43,7 @@ This local step does not need Cloud Run or a billing-enabled hosting deployment.
 
 1. Select your existing personal Google Cloud project. Confirm that **Google Calendar API** is enabled under **APIs & Services -> Library**.
 2. Open **Google Auth Platform -> Branding / Audience**. Complete the app details. If the app is External and in Testing, add the calendar owner's Google account as a test user.
-3. Under **Data Access**, configure `openid`, your email address (`userinfo.email` in the scope picker), and `https://www.googleapis.com/auth/calendar.events.freebusy`. This helper only asks for availability access and identity verification. It does not request Gmail inbox access or permission to create/edit events.
+3. Under **Data Access**, configure `openid`, your email address (`userinfo.email` in the scope picker), `https://www.googleapis.com/auth/calendar.events.freebusy`, and `https://www.googleapis.com/auth/calendar.events`. The events scope is needed only after payment so the backend can create the customer invite; Gmail access is not requested.
 4. Open **Clients -> Create client -> Web application**. Add this exact **Authorized redirect URI**:
 
    ```text
@@ -55,7 +60,7 @@ This local step does not need Cloud Run or a billing-enabled hosting deployment.
    ```
 
 7. Open the **Google consent URL printed by the helper** yourself, on the same computer running the helper. Check the app identity and requested permission, select the configured owner account and grant access. Do not paste the returned code or URL into chat. The helper listens only on `127.0.0.1:4174` and waits up to ten minutes.
-8. Google redirects to the local callback. The helper verifies state and PKCE, exchanges the code server-side, checks the verified account email, saves the refresh token privately and makes a read-only free/busy access check. It never creates a calendar event or sends an invitation. If authorization is saved but the calendar check fails, the helper reports that partial state instead of claiming success.
+8. Google redirects to the local callback. The helper verifies state and PKCE, exchanges the code server-side, checks the verified account email, saves the refresh token privately and makes a free/busy access check. It does not create a calendar event during setup. If authorization is saved but the calendar check fails, the helper reports that partial state instead of claiming success.
 
 To recheck saved authorization after fixing API/calendar settings:
 
@@ -65,11 +70,11 @@ node --env-file="$envFile" .\integrations\calendar\connect-google.mjs --check
 
 Do not stop an unrelated process if port 4174 is occupied. The helper fails explicitly rather than selecting an unregistered redirect port.
 
-External apps in Testing that request Calendar access can receive refresh tokens that expire after seven days. This is a development setup, not a permanent production authorization strategy. Sending invitations later needs an additional event-write scope and owner consent; the current grant is read-only.
+External apps in Testing that request Calendar access can receive refresh tokens that expire after seven days. This is a development setup, not a permanent production authorization strategy. If your saved authorization predates the event-write scope, reconnect Google before enabling payment confirmation.
 
 For sustained production use, address Google's OAuth publishing/verification requirements and Testing-token expiry before relying on this grant. The owner can still authorize locally with the registered loopback helper; this availability backend does not expose an OAuth callback. A future public web-based authorization flow would require its own registered HTTPS callback.
 
-## Run the read-only availability API
+## Run the availability and booking API
 
 After completing the owner authorization above, run this separately from the static server:
 
@@ -77,7 +82,7 @@ After completing the owner authorization above, run this separately from the sta
 node --env-file="$envFile" .\integrations\calendar\availability-server.mjs
 ```
 
-The API binds only to `127.0.0.1:4175` locally. It reads configuration and saved authorization at startup; restart this API process after changing credentials or reauthorizing. With the website preview on port 4173, open:
+The API binds only to `127.0.0.1:4175` locally. It reads configuration and saved authorization at startup; restart this API process after changing credentials or reauthorizing. Without Razorpay and Firestore settings, only `/api/availability` is enabled. With `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `BOOKINGS_PROJECT_ID`, the booking endpoints are enabled too. With the website preview on port 4173, open:
 
 `http://127.0.0.1:4173/?calendar=local#direct-sessions`
 
@@ -85,14 +90,18 @@ The `calendar=local` switch works only on a loopback website hostname. It is ign
 
 - `GET /healthz` indicates process health, **not** valid Google authorization.
 - `POST /api/availability` accepts exactly `{"serviceId":"mentorship","date":"YYYY-MM-DD"}` with `Content-Type: application/json`. Use a real future date.
+- `POST /api/bookings/intent` accepts exactly `serviceId`, `date`, `time`, `customerName` and `customerEmail`. It rechecks availability, persists a pending booking in Firestore and creates a Razorpay order with the server-side amount.
+- `POST /api/payments/checkout-callback` accepts the Razorpay Checkout response, verifies the HMAC signature, fetches the payment/order from Razorpay, requires captured payment, rechecks Calendar and creates the Google Calendar event invite.
+- `POST /api/razorpay/webhook` verifies the exact raw webhook body before parsing and reconciles paid/captured events when `RAZORPAY_WEBHOOK_SECRET` is configured. Browser success is not trusted by itself.
 - The response contains the approved fee, duration, IST date, eligible slots, check timestamp, freshness limit and `reserved: false`. It contains no calendar ID, raw busy intervals, event titles, owner credentials or tokens.
 - Busy overlaps remove a slot for its entire duration. A busy interval ending exactly when a slot starts does not overlap. All-day busy intervals remove every applicable time.
 - The configured dedicated calendar and the owner's primary Google Calendar are queried by default. Add other private calendars through `GOOGLE_BLOCKING_CALENDAR_IDS` if they should also remove slots. The browser never receives these calendar identifiers.
 - Busy data is cached for at most 30 seconds across services, with at most 64 dates retained. Past starts are re-filtered on every response. Token refresh and same-date queries are shared; at most eight date queries can be pending.
 - Missing or malformed provider data returns an error, never an empty busy list interpreted as free. Failures have a five-second provider cooldown.
 - The browser cancels stale requests, validates the response against the selected service, and blocks times on failures. Returning to the page rechecks availability. Expired review links refresh first and require another explicit click, avoiding asynchronously blocked payment popups.
-- Requests are limited to 1 KiB and 60 POSTs/minute per process. CORS allows the portfolio origin and local previews by default; use `ALLOWED_ORIGINS` to specify the exact production origin.
+- Availability requests are limited to 1 KiB, booking/callback requests to 4 KiB and webhooks to 256 KiB. CORS allows the portfolio origin and local previews by default; use `ALLOWED_ORIGINS` to specify the exact production origin.
 - This is a public availability API, not an authenticated booking endpoint. CORS does not stop non-browser callers. In-memory limits are not distributed quotas or a hard spending cap.
+- Firestore is the durable source for customer booking records. Do not use Cloud Run memory or `/tmp` for paid booking state.
 
 ## Cloud Run preparation
 
@@ -105,7 +114,7 @@ $sourceDirectory = Read-Host 'Absolute empty deployment directory outside the re
 node .\integrations\calendar\prepare-deployment.mjs "$sourceDirectory"
 ```
 
-This copies exactly six allowlisted files: the Dockerfile, the schedule helper, the service/price model and three calendar runtime modules. It does not upload anything. Never add credentials to this directory and never deploy from the whole website root.
+This copies exactly the allowlisted backend files: the Dockerfile, shared slot helper, Razorpay payment/client modules and calendar runtime modules. It does not upload anything. Never add credentials to this directory and never deploy from the whole website root.
 
 When the target project and private Secret Manager destination are approved:
 
@@ -120,12 +129,12 @@ Deployment configuration:
 | Setting | Value / requirement |
 | --- | --- |
 | Service / region | `nikhil-bookings-api` / `asia-south1` |
-| Source | The six-file generated directory, not the repository |
-| APIs | Cloud Run, Cloud Build, Artifact Registry and Secret Manager |
+| Source | The generated allowlisted backend directory, not the repository |
+| APIs | Cloud Run, Cloud Build, Artifact Registry, Secret Manager and Firestore |
 | Build identity | Dedicated build service account with `roles/run.builder`; deployer needs the documented source-deployment and service-account-use permissions |
 | Runtime identity | Separate service account with `roles/secretmanager.secretAccessor` on this one secret only; do not generate a service-account key |
 | Runtime secret | Mount a pinned secret version as `/secrets/calendar/calendar-runtime.json` |
-| Runtime configuration | `CALENDAR_CREDENTIALS_FILE=/secrets/calendar/calendar-runtime.json`, `ALLOWED_ORIGINS=https://cracker-jack.github.io` |
+| Runtime configuration | `CALENDAR_CREDENTIALS_FILE=/secrets/calendar/calendar-runtime.json`, `ALLOWED_ORIGINS=https://cracker-jack.github.io`, `BOOKINGS_PROJECT_ID=portfolio-bookings` plus Razorpay secrets as Cloud Run secret environment variables |
 | Resource settings | Request-based billing, minimum 0, service maximum 1 instance, concurrency 8, CPU 1, memory 256 MiB |
 | Port | Cloud Run supplies `PORT`; `K_SERVICE` enables binding to `0.0.0.0` inside the container |
 | Public invocation | Required for the static site's anonymous requests; do not bypass organization policies that disallow it |
@@ -136,11 +145,11 @@ After a successful deployment, verify an actual future-date availability POST, i
 
 Minimum-zero instances and maximum-instance limits do not guarantee zero cost. Cloud Build, Artifact Registry storage, Secret Manager and network/request usage may incur charges; budgets/alerts are not hard caps. Rebuild periodically for Node/base-image patches. For credential rotation, create a new secret version, deploy a revision pinned to it, and check Google availability again; this runtime reads its bundle at startup.
 
-## What is still not connected
+## Payment confirmation behavior
 
-Successful local OAuth and API startup do **not** connect the published GitHub Pages picker automatically. No Cloud Run deployment or public API URL is included in this source.
+Successful local OAuth and API startup do **not** update the published GitHub Pages picker automatically. Publish `index.html` only after the updated Cloud Run revision is deployed and a test booking intent can be created against the new backend.
 
-The personal Razorpay.me link still requires manual payment verification. Automatic booking confirmation needs a verifiable payment/booking association and backend reconciliation. No live gateway keys, cloud resources, payment transactions, calendar writes, email sending or public deployment are enabled by this helper.
+Payment confirmation is intentionally conservative: browser callback HMAC is verified, Razorpay payment/order are fetched server-side, the amount/currency/service/order must match the persisted booking, the payment must be captured, and Calendar is checked again before an invite is created. If payment is captured but the slot is no longer free or the invite cannot be created, the booking is marked for manual resolution rather than reported as confirmed.
 
 ## Tests
 

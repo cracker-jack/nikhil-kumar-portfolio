@@ -14,18 +14,19 @@ function directory(t) {
   return folder;
 }
 
-test("deployment packaging includes only six runtime source files and refuses existing content", (t) => {
+test("deployment packaging includes only allowlisted runtime source files and refuses existing content", (t) => {
   const destination = join(directory(t), "source");
   const run = (path) => spawnSync(process.execPath, [resolve("integrations", "calendar", "prepare-deployment.mjs"), path], { encoding: "utf8" });
   assert.equal(run(destination).status, 0);
   const files = readdirSync(destination, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile()).map((entry) => join(entry.parentPath, entry.name));
-  assert.equal(files.length, 6);
+  assert.equal(files.length, 8);
   const expected = [
     ["Dockerfile", "integrations", "calendar", "Dockerfile"],
     ["assets/booking-slots.js", "assets", "booking-slots.js"],
     ["integrations/razorpay/payment-model.mjs", "integrations", "razorpay", "payment-model.mjs"],
-    ...["google-oauth.mjs", "availability.mjs", "availability-server.mjs"].map((file) => [`integrations/calendar/${file}`, "integrations", "calendar", file]),
+    ["integrations/razorpay/api-client.mjs", "integrations", "razorpay", "api-client.mjs"],
+    ...["google-oauth.mjs", "availability.mjs", "booking-service.mjs", "availability-server.mjs"].map((file) => [`integrations/calendar/${file}`, "integrations", "calendar", file]),
   ];
   for (const [target, ...source] of expected) {
     assert.deepEqual(readFileSync(join(destination, ...target.split("/"))), readFileSync(resolve(...source)));

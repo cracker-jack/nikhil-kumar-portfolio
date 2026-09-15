@@ -4,6 +4,11 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { AvailabilityError, createAvailabilityService } from "./availability.mjs";
 import { CalendarAuthError, assertPrivateTokenPath, loadConfig, REDIRECT_URI } from "./google-oauth.mjs";
+import {
+  BookingError, FirestoreBookingStore, createBookingService, createRazorpayFromEnv,
+  verifyRazorpayWebhookFromEnv,
+} from "./booking-service.mjs";
+import { PaymentError } from "../razorpay/payment-model.mjs";
 
 export function readPrivateCredentials(env) {
   try {
@@ -27,6 +32,8 @@ export function readPrivateCredentials(env) {
 }
 
 export function createAvailabilityServer(service, {
+  bookingService,
+  webhookVerifier,
   allowedOrigins = ["https://cracker-jack.github.io", "http://127.0.0.1:4173", "http://localhost:4173"],
   maxRequestsPerMinute = 60,
   now = Date.now,
@@ -55,7 +62,10 @@ export function createAvailabilityServer(service, {
     const origin = req.headers.origin;
     if (origin && !origins.has(origin)) return send(res, 403, { error: "origin_not_allowed" });
     if (req.url === "/healthz" && req.method === "GET") return send(res, 200, { status: "ok" }, origin);
-    if (req.url !== "/api/availability") return send(res, 404, { error: "not_found" }, origin);
+    const route = req.url?.split("?")[0];
+    const routes = new Set(["/api/availability", "/api/bookings/intent", "/api/payments/checkout-callback", "/api/razorpay/webhook"]);
+    if (!routes.has(route)) return send(res, 404, { error: "not_found" }, origin);
+    if (req.url !== route) return send(res, 404, { error: "not_found" }, origin);
     if (req.method === "OPTIONS") {
       return send(res, 204, {}, origin, {
         "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type",
@@ -68,31 +78,51 @@ export function createAvailabilityServer(service, {
     if (req.headers["content-type"]?.split(";")[0].trim() !== "application/json") {
       return send(res, 415, { error: "json_required" }, origin);
     }
-    if (Number(req.headers["content-length"]) > 1024) {
+    const maxBytes = route === "/api/razorpay/webhook" ? 256 * 1024 : route === "/api/availability" ? 1024 : 4096;
+    if (Number(req.headers["content-length"]) > maxBytes) {
       req.resume();
       return send(res, 413, { error: "request_too_large" }, origin, { Connection: "close" });
     }
-    let body = "";
+    const chunks = [];
     let size = 0;
     for await (const chunk of req.iterator({ destroyOnReturn: false })) {
       size += chunk.length;
-      if (size > 1024) {
+      if (size > maxBytes) {
         send(res, 413, { error: "request_too_large" }, origin, { Connection: "close" });
         req.resume();
         return;
       }
-      body += chunk.toString("utf8");
+      chunks.push(chunk);
     }
+    const rawBody = Buffer.concat(chunks);
+    const body = rawBody.toString("utf8");
     let input;
-    try { input = JSON.parse(body); }
-    catch { return send(res, 400, { error: "invalid_json" }, origin); }
+    if (route !== "/api/razorpay/webhook") {
+      try { input = JSON.parse(body); }
+      catch { return send(res, 400, { error: "invalid_json" }, origin); }
+    }
     try {
-      const result = await service.getAvailability(input);
+      let result;
+      if (route === "/api/availability") {
+        result = await service.getAvailability(input);
+      } else if (route === "/api/bookings/intent" && bookingService) {
+        result = await bookingService.createIntent(input);
+      } else if (route === "/api/payments/checkout-callback" && bookingService) {
+        result = { booking: await bookingService.confirmCheckout(input) };
+      } else if (route === "/api/razorpay/webhook" && bookingService && webhookVerifier) {
+        const verified = webhookVerifier(rawBody, req.headers);
+        result = await bookingService.reconcileWebhook(verified);
+      } else {
+        return send(res, 404, { error: "not_found" }, origin);
+      }
       send(res, 200, result, origin);
     } catch (error) {
       if (error instanceof AvailabilityError) return send(res, error.status, { error: error.code }, origin);
+      if (error instanceof BookingError) return send(res, error.status, { error: error.code }, origin);
+      if (error instanceof PaymentError) return send(res, error.status || 400, { error: error.code }, origin);
       logger(error instanceof CalendarAuthError ? error.code : "INTERNAL_ERROR");
-      send(res, 503, { error: "availability_unavailable" }, origin, { "Retry-After": "5" });
+      const code = route === "/api/availability" ? "availability_unavailable" : "booking_unavailable";
+      send(res, 503, { error: code }, origin, { "Retry-After": "5" });
     }
   }
 
@@ -115,10 +145,27 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     const { config, saved } = readPrivateCredentials(process.env);
     const origins = process.env.ALLOWED_ORIGINS?.split(",").map((value) => value.trim());
     const service = createAvailabilityService(config, saved);
-    const server = createAvailabilityServer(service, origins ? { allowedOrigins: origins } : {});
+    let bookingService;
+    let webhookVerifier;
+    if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && process.env.BOOKINGS_PROJECT_ID) {
+      const razorpay = createRazorpayFromEnv(process.env);
+      const store = new FirestoreBookingStore({
+        projectId: process.env.BOOKINGS_PROJECT_ID,
+        databaseId: process.env.FIRESTORE_DATABASE_ID || "(default)",
+      });
+      bookingService = createBookingService({
+        availabilityService: service, razorpay, store, calendarConfig: config, savedAuthorization: saved,
+      });
+      if (process.env.RAZORPAY_WEBHOOK_SECRET) {
+        webhookVerifier = (rawBody, headers) => verifyRazorpayWebhookFromEnv(process.env, rawBody, headers);
+      }
+    }
+    const server = createAvailabilityServer(service, { ...(origins ? { allowedOrigins: origins } : {}), bookingService, webhookVerifier });
     server.on("error", () => { console.error("Availability listener could not start; check the configured port."); process.exitCode = 1; });
     server.listen(port, process.env.K_SERVICE ? "0.0.0.0" : "127.0.0.1", () => {
-      console.log(`Read-only calendar availability API listening on port ${port}. No booking or payment writes are enabled.`);
+      console.log(bookingService
+        ? `Calendar availability and verified booking API listening on port ${port}.`
+        : `Read-only calendar availability API listening on port ${port}. No booking or payment writes are enabled.`);
     });
   } catch (error) {
     console.error(error instanceof CalendarAuthError ? `${error.code}: ${error.message}` : "Availability API configuration is invalid.");

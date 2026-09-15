@@ -234,7 +234,7 @@ test("public checkout options exclude secrets, use saved pricing and default to 
   assert.deepEqual(options.config.display.sequence, ["block.upi"]);
   assert.equal(options.config.display.preferences.show_default_blocks, false);
   assert.deepEqual(options.config.display.blocks.upi.instruments, [{ method: "upi" }]);
-  assert.throws(() => api.checkoutOptions({ ...STORED, mode: "live" }), isError("INVALID_ORDER"));
+  assert.equal(api.checkoutOptions({ ...STORED, mode: "live" }).order_id, STORED.orderId);
 });
 
 test("live-display configuration excludes Collect even inside explicitly added blocks", () => {
@@ -508,7 +508,7 @@ test("corrupt stored states or unnormalized capture flags cannot become successf
   const initial = createPaymentState(STORED);
   const payment = normalizePayment(providerPayment());
   for (const changes of [
-    { mode: "live" }, { amountPaise: 0 }, { currency: "USD" }, { status: "unknown" },
+    { mode: "preview" }, { amountPaise: 0 }, { currency: "USD" }, { status: "unknown" },
     { refundedPaise: -1 }, { refundedPaise: 1 }, { captured: true, status: "captured", paymentId: null },
   ]) assert.throws(() => applyVerifiedPayment({ ...initial, ...changes }, payment), PaymentError);
   assert.throws(() => applyVerifiedPayment(initial, { ...payment, status: "failed", captured: true }),

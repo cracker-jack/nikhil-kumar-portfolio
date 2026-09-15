@@ -93,7 +93,7 @@ test("authorization URL uses offline consent, least-privilege scope, state and P
   assert.equal(url.searchParams.get("redirect_uri"), REDIRECT_URI);
   assert.equal(url.searchParams.get("access_type"), "offline");
   assert.equal(url.searchParams.get("prompt"), "consent");
-  assert.deepEqual(url.searchParams.get("scope").split(" "), ["openid", "email", CALENDAR_SCOPE]);
+  assert.deepEqual(url.searchParams.get("scope").split(" "), SCOPES);
   assert.equal(url.searchParams.get("code_challenge_method"), "S256");
   assert.equal(url.searchParams.get("code_challenge"), createHash("sha256").update(auth.verifier).digest("base64url"));
   assert.match(auth.state, /^[a-f0-9]{64}$/);

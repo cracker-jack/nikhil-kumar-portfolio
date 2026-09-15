@@ -22,23 +22,24 @@ test("classic direct-session prices and durations match the approved server cata
   }
 });
 
-test("the hosted payment link is exact and tied to a visible manual-booking disclosure", () => {
+test("the hosted payment fallback remains exact while Standard Checkout is explicit", () => {
   assert.ok(section);
   const links = [...section.matchAll(/<a\b[^>]*href="(https:\/\/razorpay\.me\/[^"]+)"[^>]*>/g)];
-  assert.equal(links.length, 2);
+  assert.equal(links.length, 1);
   for (const link of links) {
     assert.equal(link[1], "https://razorpay.me/@nikhilkumar7447");
     assert.match(link[0], /aria-describedby="direct-payment-note(?:\s[^"]+)?"/);
   }
+  assert.match(html, /data-booking-api="https:\/\/nikhil-bookings-api-otzn3ne7rq-el\.a\.run\.app"/);
+  assert.match(section, /data-booking-pay>Pay with Razorpay/);
   assert.match(section, /id="direct-payment-note"/);
-  assert.match(section, /Pay only after we have agreed a slot\./);
-  assert.match(section, /enter the listed session fee and add the service name as your note/);
-  assert.match(section, /Payment does not automatically reserve a slot or send a calendar invitation\./);
+  assert.match(section, /Booking is confirmed only after verified payment\./);
+  assert.match(section, /confirmed payments receive a Google Calendar invitation/i);
   assert.doesNotMatch(section, /<(?:iframe|script)\b/);
   assert.match(section, /data-slot-picker hidden/);
   assert.match(section, /<div data-booking-fallback>/);
   assert.match(section, /live Google Calendar availability is not connected/);
-  assert.match(section, /Your selection is not sent to Razorpay automatically/);
+  assert.match(section, /After a verified captured payment/);
 });
 
 test("direct sessions retain an email-first path and separate Topmate pricing", () => {

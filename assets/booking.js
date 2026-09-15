@@ -323,7 +323,7 @@ if (root) {
       showReview(selection);
       const customer = customerDetails();
       if (bookingApi && customer) await startCheckout(selection, customer);
-      else if (!bookingApi) window.open("https://razorpay.me/@nikhilkumar7447", "_blank", "noopener,noreferrer");
+      else if (!bookingApi) status.textContent = "Secure Razorpay Checkout is unavailable. No payment was started.";
     });
     copyButton.addEventListener("click", async () => {
       if (calendarExpired()) {

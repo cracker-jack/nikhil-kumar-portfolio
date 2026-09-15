@@ -80,15 +80,15 @@ The Topmate portion of the mentorship section is a dated, static snapshot of [Ni
 - The existing Topmate booking links still go directly to the corresponding services. Their availability and pricing remain on Topmate, separate from the direct-session option below.
 - No Topmate widgets, scripts, remote images, or tracking code are embedded.
 
-## Direct sessions and hosted payments
+## Direct sessions and Razorpay Standard Checkout
 
-The classic homepage's `#direct-sessions` block lists the five user-approved session prices and durations. With JavaScript, it offers service/date/time selection, a review step, a prefilled email request and the user-supplied [Razorpay payment page](https://razorpay.me/@nikhilkumar7447). Without JavaScript, the original email-first/payment links remain available.
+The classic homepage's `#direct-sessions` block lists the five user-approved session prices and durations. With JavaScript and the Cloud Run booking API, it offers service/date/time selection, customer details, a server-created Razorpay order, Standard Checkout, server-side signature/provider verification, and Calendar confirmation. Without JavaScript or when the secure booking API is unavailable, only the email enquiry path remains; no unverified payment link is offered.
 
-- The public payment page was inspected on 14 September 2026: it identifies the recipient as NIKHIL KUMAR and asks the customer to enter an amount and optional note. No payment was submitted.
-- The form collects a session preference, not a booking. With no backend URL it uses working hours only. When configured, it sends only the selected service/date to a separate read-only calendar API; it does not store personal information. The payment action is a plain outbound link, not an embedded gateway or payment-verification service. No credentials belong in the portfolio.
-- The page tells customers to agree a slot by email first, then enter the listed fee and service name on Razorpay. Payment alone does not automatically reserve a slot or send a calendar invitation.
+- Razorpay credentials are stored in Google Secret Manager and injected into Cloud Run. The private key secret never reaches browser code.
+- The backend creates the order from its trusted service catalog, validates the callback HMAC, fetches the payment and order from Razorpay, and confirms only captured payments matching the stored amount, currency, service, receipt, and booking ID.
+- The browser loads Razorpay's official Standard Checkout script only when the customer starts payment. The legacy Razorpay.me fallback has been removed.
 - Prices are mentorship INR 1 / 30 minutes for payment-flow testing, resume review INR 399 / 30 minutes, HLD and LLD mocks INR 999 each / 60 minutes, and coding/DSA mock INR 699 / 60 minutes. These are direct-session fees, not assertions about Topmate prices.
-- Keep the homepage price list synchronized with `APPROVED_PRICES_PAISE` and `SERVICES` in `integrations/razorpay/payment-model.mjs`. The hosted-link contract tests check those values together.
+- Keep the homepage price list synchronized with `APPROVED_PRICES_PAISE` and `SERVICES` in `integrations/razorpay/payment-model.mjs`. The checkout contract tests check those values together.
 - The picker uses IST rather than the visitor's device timezone, excludes past starts, and offers 30-minute-grid preferences that fit the selected duration and finish by 23:00. Its notice distinguishes working-hours-only mode from Google-checked times; neither reserves a slot.
 - Changing the selection clears the old review. Email/payment actions revalidate time before navigation. The Razorpay link opens in a new tab; the customer must manually enter the fee and paste the suggested note because the generic link does not transfer the selected date/time.
 - The hosted page controls its payment methods and terms. Do not claim that this generic link enforces UPI-only checkout, fixes the amount, binds a payment to a session, or signals successful payment back to this website. Do not invent prefill parameters or treat a redirect as proof of payment.

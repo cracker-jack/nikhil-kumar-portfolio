@@ -34,7 +34,7 @@ node --test .\integrations\razorpay\razorpay.test.mjs .\integrations\razorpay\ho
 
 There are no dependencies to install. Tests inject an in-process HTTP substitute and fictional credentials; they never contact Razorpay, move money, or send invitations. Passing them is not an end-to-end gateway certification.
 
-`hosted-link.test.mjs` also checks the classic homepage's static prices, exact outbound payment URL, manual-scheduling disclosures, and retained Topmate links. Those repository-specific checks do not exercise a real hosted payment.
+`hosted-link.test.mjs` also checks the classic homepage's static prices, Standard Checkout configuration, absence of a hosted-payment fallback, manual-scheduling disclosures, and retained Topmate links.
 
 ## Module contracts
 

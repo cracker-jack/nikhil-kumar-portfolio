@@ -22,14 +22,9 @@ test("classic direct-session prices and durations match the approved server cata
   }
 });
 
-test("the hosted payment fallback remains exact while Standard Checkout is explicit", () => {
+test("Standard Checkout is explicit and no unverified hosted-payment fallback remains", () => {
   assert.ok(section);
-  const links = [...section.matchAll(/<a\b[^>]*href="(https:\/\/razorpay\.me\/[^"]+)"[^>]*>/g)];
-  assert.equal(links.length, 1);
-  for (const link of links) {
-    assert.equal(link[1], "https://razorpay.me/@nikhilkumar7447");
-    assert.match(link[0], /aria-describedby="direct-payment-note(?:\s[^"]+)?"/);
-  }
+  assert.doesNotMatch(section, /razorpay\.me/i);
   assert.match(html, /data-booking-api="https:\/\/nikhil-bookings-api-otzn3ne7rq-el\.a\.run\.app"/);
   assert.match(section, /data-booking-pay>Pay with Razorpay/);
   assert.match(section, /id="direct-payment-note"/);
@@ -38,6 +33,7 @@ test("the hosted payment fallback remains exact while Standard Checkout is expli
   assert.doesNotMatch(section, /<(?:iframe|script)\b/);
   assert.match(section, /data-slot-picker hidden/);
   assert.match(section, /<div data-booking-fallback>/);
+  assert.match(section, /do not send payment until the service is restored/i);
   assert.match(section, /live Google Calendar availability is not connected/);
   assert.match(section, /After a verified captured payment/);
 });

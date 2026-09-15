@@ -8,6 +8,7 @@ export const REDIRECT_URI = "http://127.0.0.1:4174/oauth/google/callback";
 export const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events.freebusy";
 export const SCOPES = Object.freeze(["openid", "email", CALENDAR_SCOPE]);
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const PRIMARY_CALENDAR = "primary";
 
 export class CalendarAuthError extends Error {
   constructor(code, message) {
@@ -23,6 +24,15 @@ function requireValue(condition, code, message) {
 
 function nonblank(value) {
   return typeof value === "string" && value.length > 0 && value === value.trim() && !/[\r\n\0]/.test(value);
+}
+
+function uniqueCalendars(values) {
+  const ids = [];
+  for (const value of values) {
+    requireValue(nonblank(value), "CALENDAR_ID_REQUIRED", "Calendar identifiers must be non-empty private values.");
+    if (!ids.includes(value)) ids.push(value);
+  }
+  return Object.freeze(ids);
 }
 
 export function assertPrivateTokenPath(path, repoRoot = REPO_ROOT) {
@@ -57,6 +67,11 @@ export function loadConfig(env) {
     clientSecret: env.GOOGLE_CLIENT_SECRET,
     ownerEmail: env.GOOGLE_OWNER_EMAIL.toLowerCase(),
     calendarId: env.GOOGLE_CALENDAR_ID,
+    blockingCalendarIds: uniqueCalendars([
+      env.GOOGLE_CALENDAR_ID,
+      PRIMARY_CALENDAR,
+      ...(env.GOOGLE_BLOCKING_CALENDAR_IDS ? env.GOOGLE_BLOCKING_CALENDAR_IDS.split(",").map((value) => value.trim()) : []),
+    ]),
     tokenFile: assertPrivateTokenPath(env.GOOGLE_TOKEN_FILE),
     redirectUri: REDIRECT_URI,
   });
@@ -166,18 +181,25 @@ export function saveAuthorization(config, tokens) {
 }
 
 export async function readCalendarBusy(config, accessToken, timeMin, timeMax, fetchImpl = globalThis.fetch) {
+  const calendarIds = config.blockingCalendarIds?.length ? config.blockingCalendarIds : [config.calendarId];
   const data = await googleJson("https://www.googleapis.com/calendar/v3/freeBusy", {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ timeMin, timeMax, timeZone: "Asia/Kolkata", items: [{ id: config.calendarId }] }),
+    body: JSON.stringify({ timeMin, timeMax, timeZone: "Asia/Kolkata", items: calendarIds.map((id) => ({ id })) }),
   }, fetchImpl);
-  requireValue(data.kind === "calendar#freeBusy" && data.calendars && Object.hasOwn(data.calendars, config.calendarId),
-    "CALENDAR_CHECK_FAILED", "The configured calendar was not returned. Check GOOGLE_CALENDAR_ID and its access permissions.");
-  const calendar = data.calendars[config.calendarId];
-  requireValue(calendar && (!Object.hasOwn(calendar, "errors") || (Array.isArray(calendar.errors) && calendar.errors.length === 0))
-    && Array.isArray(calendar.busy),
-  "CALENDAR_CHECK_FAILED", "Google could not read the configured calendar's availability. Do not treat it as free.");
-  return calendar.busy;
+  requireValue(data.kind === "calendar#freeBusy" && data.calendars,
+    "CALENDAR_CHECK_FAILED", "The configured calendars were not returned. Check calendar IDs and access permissions.");
+  const busy = [];
+  for (const id of calendarIds) {
+    requireValue(Object.hasOwn(data.calendars, id),
+      "CALENDAR_CHECK_FAILED", "Google did not return every configured calendar. Do not treat it as free.");
+    const calendar = data.calendars[id];
+    requireValue(calendar && (!Object.hasOwn(calendar, "errors") || (Array.isArray(calendar.errors) && calendar.errors.length === 0))
+      && Array.isArray(calendar.busy),
+    "CALENDAR_CHECK_FAILED", "Google could not read a configured calendar's availability. Do not treat it as free.");
+    busy.push(...calendar.busy);
+  }
+  return busy;
 }
 
 export async function probeCalendar(config, accessToken, fetchImpl = globalThis.fetch, now = new Date()) {

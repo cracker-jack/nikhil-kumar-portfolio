@@ -13,6 +13,7 @@ const START = Date.parse(`${DAY}T10:29:50Z`);
 const config = {
   clientId: "fictional.apps.googleusercontent.com", clientSecret: "fictional-secret",
   ownerEmail: "owner@example.invalid", calendarId: "private@example.invalid",
+  blockingCalendarIds: Object.freeze(["private@example.invalid", "primary"]),
 };
 const saved = { client_id: config.clientId, authorized_email: config.ownerEmail, refresh_token: "fictional-refresh" };
 const json = (value, status = 200) => new Response(JSON.stringify(value), { status });
@@ -34,8 +35,11 @@ function fixture() {
       await state.waitForBusy;
       if (state.fail) return json({ error: "private provider detail" }, 503);
       const query = JSON.parse(options.body);
-      assert.deepEqual(query.items, [{ id: config.calendarId }]);
-      return json({ kind: "calendar#freeBusy", calendars: { [config.calendarId]: { busy: state.busy } } });
+      assert.deepEqual(query.items, [{ id: config.calendarId }, { id: "primary" }]);
+      return json({
+        kind: "calendar#freeBusy",
+        calendars: { [config.calendarId]: { busy: state.busy }, primary: { busy: state.primaryBusy || [] } },
+      });
     },
   });
   return { state, service, advance: (ms) => { clock += ms; } };
@@ -63,6 +67,19 @@ test("overlaps block both durations, but touching boundaries remain free", () =>
   assert.equal(long[0].time, "17:00");
   const allDay = normalizeBusy([{ start: `${DAY}T00:00:00+05:30`, end: "2026-09-19T00:00:00+05:30" }]);
   assert.equal(removeBusySlots(short, allDay).length, 0);
+});
+
+test("primary-calendar busy intervals also block public slots", async () => {
+  const { service, state } = fixture();
+  state.primaryBusy = [{ start: "2026-09-19T16:00:00+05:30", end: "2026-09-19T17:00:00+05:30" }];
+  const short = await service.getAvailability(input("mentorship", "2026-09-19"));
+  assert.ok(!short.slots.some((slot) => ["16:00", "16:30"].includes(slot.time)));
+  assert.ok(short.slots.some((slot) => slot.time === "15:30"));
+  assert.ok(short.slots.some((slot) => slot.time === "17:00"));
+  const long = await service.getAvailability(input("hld-mock", "2026-09-19"));
+  assert.ok(!long.slots.some((slot) => ["15:30", "16:00", "16:30"].includes(slot.time)));
+  assert.ok(long.slots.some((slot) => slot.time === "15:00"));
+  assert.ok(long.slots.some((slot) => slot.time === "17:00"));
 });
 
 test("malformed, impossible and non-positive Google intervals fail closed", () => {

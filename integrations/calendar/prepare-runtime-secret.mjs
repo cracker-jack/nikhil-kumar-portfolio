@@ -10,7 +10,8 @@ export async function prepareRuntimeSecret(env, { fetchImpl = globalThis.fetch }
   const destination = assertPrivateTokenPath(join(dirname(config.tokenFile), "calendar-runtime.json"));
   writeFileSync(destination, JSON.stringify({
     clientId: config.clientId, clientSecret: config.clientSecret,
-    ownerEmail: config.ownerEmail, calendarId: config.calendarId, authorization,
+    ownerEmail: config.ownerEmail, calendarId: config.calendarId,
+    blockingCalendarIds: config.blockingCalendarIds, authorization,
   }, null, 2), { flag: "wx", mode: 0o600 });
   return destination;
 }

@@ -26,6 +26,7 @@ The prepared private file has these fields:
 | `GOOGLE_CLIENT_SECRET` | The same client's secret |
 | `GOOGLE_OWNER_EMAIL` | The account that owns the booking calendar |
 | `GOOGLE_CALENDAR_ID` | The private dedicated calendar ID already supplied by the owner |
+| `GOOGLE_BLOCKING_CALENDAR_IDS` | Optional comma-separated extra private calendars to block against. The owner's `primary` calendar is checked by default together with `GOOGLE_CALENDAR_ID`. |
 | `GOOGLE_REDIRECT_URI` | Exactly `http://127.0.0.1:4174/oauth/google/callback` |
 | `GOOGLE_TOKEN_FILE` | Absolute private JSON destination outside this repository |
 
@@ -86,7 +87,7 @@ The `calendar=local` switch works only on a loopback website hostname. It is ign
 - `POST /api/availability` accepts exactly `{"serviceId":"mentorship","date":"YYYY-MM-DD"}` with `Content-Type: application/json`. Use a real future date.
 - The response contains the approved fee, duration, IST date, eligible slots, check timestamp, freshness limit and `reserved: false`. It contains no calendar ID, raw busy intervals, event titles, owner credentials or tokens.
 - Busy overlaps remove a slot for its entire duration. A busy interval ending exactly when a slot starts does not overlap. All-day busy intervals remove every applicable time.
-- Only the configured dedicated calendar is queried. Busy events on other personal/work calendars are not included automatically.
+- The configured dedicated calendar and the owner's primary Google Calendar are queried by default. Add other private calendars through `GOOGLE_BLOCKING_CALENDAR_IDS` if they should also remove slots. The browser never receives these calendar identifiers.
 - Busy data is cached for at most 30 seconds across services, with at most 64 dates retained. Past starts are re-filtered on every response. Token refresh and same-date queries are shared; at most eight date queries can be pending.
 - Missing or malformed provider data returns an error, never an empty busy list interpreted as free. Failures have a five-second provider cooldown.
 - The browser cancels stale requests, validates the response against the selected service, and blocks times on failures. Returning to the page rechecks availability. Expired review links refresh first and require another explicit click, avoiding asynchronously blocked payment popups.

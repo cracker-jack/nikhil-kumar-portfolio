@@ -53,7 +53,7 @@ test("private runtime bundles round-trip without carrying Razorpay or access tok
     else if (url.endsWith("/userinfo")) data = { email: config.ownerEmail, email_verified: true };
     else {
       assert.equal(url, "https://www.googleapis.com/calendar/v3/freeBusy");
-      data = { kind: "calendar#freeBusy", calendars: { [config.calendarId]: { busy: [] } } };
+      data = { kind: "calendar#freeBusy", calendars: { [config.calendarId]: { busy: [] }, primary: { busy: [] } } };
     }
     return new Response(JSON.stringify(data));
   };
@@ -64,6 +64,7 @@ test("private runtime bundles round-trip without carrying Razorpay or access tok
   const loaded = readPrivateCredentials({ CALENDAR_CREDENTIALS_FILE: destination });
   assert.equal(loaded.config.clientId, config.clientId);
   assert.equal(loaded.config.clientSecret, config.clientSecret);
+  assert.deepEqual(loaded.config.blockingCalendarIds, [config.calendarId, "primary"]);
   assert.equal(loaded.saved.refresh_token, "fictional-refresh");
   assert.equal(readPrivateCredentials(env).saved.refresh_token, loaded.saved.refresh_token);
   await assert.rejects(prepareRuntimeSecret(env, { fetchImpl }), { code: "EEXIST" });

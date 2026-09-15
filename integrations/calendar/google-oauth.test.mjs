@@ -52,9 +52,9 @@ function google(config, overrides = {}) {
     }
     if (url === "https://www.googleapis.com/calendar/v3/freeBusy") {
       assert.equal(options.method, "POST");
-      assert.deepEqual(JSON.parse(options.body).items, [{ id: config.calendarId }]);
+      assert.deepEqual(JSON.parse(options.body).items, [{ id: config.calendarId }, { id: "primary" }]);
       return json({
-        kind: "calendar#freeBusy", calendars: { [config.calendarId]: { busy: [] } }, ...overrides.calendar,
+        kind: "calendar#freeBusy", calendars: { [config.calendarId]: { busy: [] }, primary: { busy: [] } }, ...overrides.calendar,
       });
     }
     assert.fail("An unexpected Google endpoint was requested.");
@@ -180,8 +180,10 @@ test("failed or missing calendar results never count as free availability", asyn
   const { config } = fixture(t);
   for (const calendar of [
     { calendars: {} }, { kind: "unexpected" },
+    { calendars: { [config.calendarId]: { busy: [] } } },
     { calendars: { [config.calendarId]: { errors: [{ reason: "notFound" }], busy: [] } } },
     { calendars: { [config.calendarId]: { busy: null } } },
+    { calendars: { [config.calendarId]: { busy: [] }, primary: { errors: [{ reason: "forbidden" }], busy: [] } } },
   ]) await assert.rejects(probeCalendar(config, ACCESS, google(config, { calendar }).fetchImpl), isError("CALENDAR_CHECK_FAILED"));
   await assert.rejects(checkSavedAuthorization(config, { client_id: "other" }, google(config).fetchImpl), isError("SAVED_AUTH_MISMATCH"));
 });

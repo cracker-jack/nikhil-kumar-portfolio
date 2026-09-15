@@ -13,6 +13,7 @@ export function readPrivateCredentials(env) {
       const config = loadConfig({
         GOOGLE_CLIENT_ID: bundle.clientId, GOOGLE_CLIENT_SECRET: bundle.clientSecret,
         GOOGLE_OWNER_EMAIL: bundle.ownerEmail, GOOGLE_CALENDAR_ID: bundle.calendarId,
+        GOOGLE_BLOCKING_CALENDAR_IDS: Array.isArray(bundle.blockingCalendarIds) ? bundle.blockingCalendarIds.join(",") : "",
         GOOGLE_REDIRECT_URI: REDIRECT_URI, GOOGLE_TOKEN_FILE: file,
       });
       return { config, saved: bundle.authorization };

@@ -80,6 +80,8 @@ flowchart LR
 | `paid_needs_manual_resolution` | Payment is captured but the slot became unavailable or the Calendar invite could not be created. Manual follow-up is required. |
 | `payment_failed` / provider-specific failed states | Razorpay reported failure/cancellation/refund-like state. No calendar invite is created. |
 
+Creating a booking intent places a 15-minute server-side hold on the selected slot. A second checkout for that slot is rejected before another Razorpay order is created. Confirmed bookings and captured payments awaiting manual resolution continue to claim the slot until they are resolved.
+
 ### Firestore record shape
 
 The booking store persists one document per booking ID. Key fields:
@@ -475,4 +477,3 @@ Common causes:
 - Placeholder Razorpay key secret such as `YOUR_RAZO...`.
 - Markdown-escaped shell variables like `RAZORPAY\_KEY\_ID`; shell commands must use `RAZORPAY_KEY_ID`.
 - Deploying from the wrong folder instead of the prepared allowlisted bundle.
-

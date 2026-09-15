@@ -5,6 +5,14 @@ import { RazorpayApiClient } from "../razorpay/api-client.mjs";
 import { createCalendarEvent, refreshCalendarAccess, requireEventWriteScope } from "./google-oauth.mjs";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const PAYMENT_HOLD_MS = 15 * 60 * 1000;
+
+function claimsSlot(record, at = new Date()) {
+  if (["confirmed", "paid_needs_manual_resolution"].includes(record?.status)) return true;
+  return ["payment_created", "payment_pending"].includes(record?.status)
+    && typeof record.holdUntil === "string"
+    && Date.parse(record.holdUntil) > at.getTime();
+}
 
 export class BookingError extends Error {
   constructor(code, message, status = 400) {
@@ -80,9 +88,9 @@ export class MemoryBookingStore {
     return null;
   }
 
-  async findConfirmedSlot({ date, time }) {
+  async findClaimedSlot({ date, time }, at = new Date()) {
     for (const record of this.#records.values()) {
-      if (record.date === date && record.time === time && ["confirmed", "paid_needs_manual_resolution"].includes(record.status)) {
+      if (record.date === date && record.time === time && claimsSlot(record, at)) {
         return structuredClone(record);
       }
     }
@@ -187,7 +195,7 @@ export class FirestoreBookingStore {
     return this.#query("orderId", orderId);
   }
 
-  async findConfirmedSlot({ date, time }) {
+  async findClaimedSlot({ date, time }, at = new Date()) {
     const rows = await this.#request("POST", `${this.#base().replace(/\/bookings$/, "")}:runQuery`, {
       structuredQuery: {
         from: [{ collectionId: "bookings" }],
@@ -206,7 +214,7 @@ export class FirestoreBookingStore {
     if (!Array.isArray(rows)) return null;
     for (const row of rows) {
       const record = firestoreRecord(row.document);
-      if (record && ["confirmed", "paid_needs_manual_resolution"].includes(record.status)) return record;
+      if (record && claimsSlot(record, at)) return record;
     }
     return null;
   }
@@ -242,7 +250,7 @@ export function createBookingService({
     "invalid_configuration", "Availability service is required.");
   fail(razorpay && Array.isArray(razorpay.services), "invalid_configuration", "Razorpay client is required.");
   fail(store && typeof store.create === "function" && typeof store.update === "function"
-    && typeof store.getByOrder === "function" && typeof store.findConfirmedSlot === "function",
+    && typeof store.getByOrder === "function" && typeof store.findClaimedSlot === "function",
   "invalid_configuration", "Booking store is required.");
   fail(calendarConfig && savedAuthorization, "invalid_configuration", "Calendar configuration is required.");
   const slotLocks = new Map();
@@ -268,7 +276,7 @@ export function createBookingService({
       });
     }
     return withSlotLock(`${record.date}|${record.time}`, async () => {
-      const existing = await store.findConfirmedSlot(record);
+      const existing = await store.findClaimedSlot(record, now());
       if (existing && existing.bookingId !== record.bookingId) {
         return store.update(record.bookingId, {
           status: "paid_needs_manual_resolution", payment: { ...record.payment, ...payment },
@@ -307,27 +315,33 @@ export function createBookingService({
   return {
     async createIntent(input) {
       const selection = validateBookingIntent(input, razorpay.services, now());
-      const fresh = await availabilityService.getAvailability({ serviceId: selection.service.id, date: selection.date });
-      fail(fresh.slots.some((slot) => slot.time === selection.time),
-        "slot_unavailable", "That time is no longer available. Choose another slot.", 409);
-      const bookingId = `bk_${randomBytes(12).toString("hex")}`;
-      const order = await razorpay.createOrder({
-        serviceId: selection.service.id, bookingId, receipt: `bk_${bookingId.slice(3, 27)}`,
+      return withSlotLock(`${selection.date}|${selection.time}`, async () => {
+        const existing = await store.findClaimedSlot(selection, now());
+        fail(!existing, "slot_unavailable", "That time is already reserved. Choose another slot.", 409);
+        const fresh = await availabilityService.getAvailability({ serviceId: selection.service.id, date: selection.date });
+        fail(fresh.slots.some((slot) => slot.time === selection.time),
+          "slot_unavailable", "That time is no longer available. Choose another slot.", 409);
+        const bookingId = `bk_${randomBytes(12).toString("hex")}`;
+        const order = await razorpay.createOrder({
+          serviceId: selection.service.id, bookingId, receipt: `bk_${bookingId.slice(3, 27)}`,
+        });
+        const createdAt = now();
+        const record = {
+          bookingId, status: "payment_created", createdAt: createdAt.toISOString(), updatedAt: createdAt.toISOString(),
+          holdUntil: new Date(createdAt.getTime() + PAYMENT_HOLD_MS).toISOString(),
+          serviceId: selection.service.id, serviceName: selection.service.name,
+          date: selection.date, time: selection.time, slot: selection.slot,
+          customerName: selection.customerName, customerEmail: selection.customerEmail,
+          order, payment: createPaymentState(order),
+        };
+        await store.create(record);
+        return {
+          booking: publicBooking(record),
+          checkout: razorpay.checkoutOptions(order, {
+            customerName: record.customerName, customerEmail: record.customerEmail,
+          }),
+        };
       });
-      const record = {
-        bookingId, status: "payment_created", createdAt: now().toISOString(), updatedAt: now().toISOString(),
-        serviceId: selection.service.id, serviceName: selection.service.name,
-        date: selection.date, time: selection.time, slot: selection.slot,
-        customerName: selection.customerName, customerEmail: selection.customerEmail,
-        order, payment: createPaymentState(order),
-      };
-      await store.create(record);
-      return {
-        booking: publicBooking(record),
-        checkout: razorpay.checkoutOptions(order, {
-          customerName: record.customerName, customerEmail: record.customerEmail,
-        }),
-      };
     },
 
     async confirmCheckout(callback) {

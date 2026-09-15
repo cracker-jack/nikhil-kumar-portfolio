@@ -96,6 +96,19 @@ test("booking intent validates customer data, rechecks availability and returns 
   assert.ok(!JSON.stringify(result).includes("secret"));
 });
 
+test("active payment hold prevents a second checkout for the same slot", async () => {
+  const { service, calls } = fixture();
+  const input = {
+    serviceId: "mentorship", date: "2026-09-16", time: "16:00",
+    customerName: "First Customer", customerEmail: "first@example.com",
+  };
+  await service.createIntent(input);
+  await assert.rejects(service.createIntent({
+    ...input, customerName: "Second Customer", customerEmail: "second@example.com",
+  }), { code: "slot_unavailable" });
+  assert.equal(calls.orders, 1);
+});
+
 test("invalid slot and customer details fail before payment order creation", async () => {
   assert.throws(() => validateBookingIntent({
     serviceId: "mentorship", date: "2026-09-16", time: "16:00", customerName: "A", customerEmail: "bad",

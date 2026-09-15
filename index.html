@@ -354,7 +354,7 @@
         </div>
       </section>
       <p class="source-note mentorship-source">Selected testimonial excerpts and profile figures from <a href="https://topmate.io/nikhil_kr">Topmate</a>, checked <time datetime="2026-09-13">13 September 2026</time>. Platform tenure is based on the March 2022 join date. Visit Topmate for current ratings, services, availability, and pricing.</p>
-      <section class="direct-sessions" id="direct-sessions" aria-labelledby="direct-sessions-title">
+      <section class="direct-sessions" id="direct-sessions" aria-labelledby="direct-sessions-title" data-availability-api="https://nikhil-bookings-api-otzn3ne7rq-el.a.run.app/api/availability">
         <div class="direct-sessions-copy">
           <p class="eyebrow">Arrange a direct session</p>
           <h3 id="direct-sessions-title">Focused time.<br>Practical feedback.</h3>
@@ -382,6 +382,7 @@
                 <div><label for="booking-time">Preferred time (IST)</label><select id="booking-time" required disabled><option value="">Choose a time</option></select></div>
               </fieldset>
               <p class="booking-status" id="booking-status" role="status"></p>
+              <p class="booking-notice" data-calendar-failure hidden>The calendar service is unavailable. <a href="mailto:kumarnikhil374@gmail.com?subject=Direct%20session%20enquiry">Email to arrange a session</a>; no slot has been reserved.</p>
               <button class="button button-primary" type="submit">Review session &amp; payment <span aria-hidden="true">&#8594;</span></button>
             </form>
             <div class="booking-review" data-booking-review hidden>

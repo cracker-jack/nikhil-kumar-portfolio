@@ -1,4 +1,5 @@
 import { paymentNote, preferredSlots, selectedSlot, todayInIST } from "./booking-slots.js";
+import { availabilityEndpoint, checkedAvailability } from "./availability-client.js";
 
 const root = document.querySelector("#direct-sessions");
 if (root) {
@@ -16,6 +17,15 @@ if (root) {
   const payLink = root.querySelector("[data-booking-pay]");
   const copyButton = root.querySelector("[data-copy-booking-note]");
   const copyStatus = root.querySelector("#booking-copy-status");
+  const calendarFailure = root.querySelector("[data-calendar-failure]");
+  let endpoint = "";
+  let configurationError = false;
+  try {
+    endpoint = availabilityEndpoint(root.dataset.availabilityApi, location.href);
+  } catch {
+    configurationError = true;
+    console.error("The calendar endpoint configuration is invalid; use the email-first fallback.");
+  }
   const prices = [...root.querySelectorAll("[data-service-id]")].map((row) => ({
     id: row.dataset.serviceId,
     name: row.querySelector("dt").firstChild.textContent.trim(),
@@ -23,11 +33,17 @@ if (root) {
     priceInr: Number(row.querySelector("data").value),
   }));
 
-  if (prices.length !== 5 || new Set(prices.map((service) => service.id)).size !== 5
+  if (configurationError || prices.length !== 5 || new Set(prices.map((service) => service.id)).size !== 5
     || prices.some((service) => !service.name || ![30, 60].includes(service.duration)
       || !Number.isSafeInteger(service.priceInr) || service.priceInr < 1)) {
-    console.error("The booking picker price list is invalid; the email-first fallback remains available.");
+    if (!configurationError) console.error("The booking picker price list is invalid; the email-first fallback remains available.");
   } else {
+    let serial = 0;
+    let inFlight;
+    let calendarResult;
+    if (endpoint) {
+      root.querySelector("#booking-notice").textContent = "Times are checked against my Google Calendar. Selecting a time does not reserve it or confirm a booking. Please agree the slot with me before paying.";
+    }
     for (const service of prices) {
       const optionName = service.id === "dsa-mock" ? "Coding / DSA interview" : service.name;
       serviceInput.add(new Option(optionName, service.id));
@@ -39,13 +55,20 @@ if (root) {
       copyStatus.textContent = "";
     }
 
-    function updateTimes() {
+    async function updateTimes({ preserveReview = false } = {}) {
+      const request = ++serial;
+      inFlight?.abort();
+      inFlight = undefined;
+      const wasReviewed = preserveReview && !review.hidden;
+      const reviewFocus = wasReviewed && review.contains(document.activeElement) ? document.activeElement : null;
       const previousTime = timeInput.value;
       dateInput.min = todayInIST();
       dateInput.setCustomValidity("");
       timeInput.setCustomValidity("");
       timeInput.replaceChildren(new Option("Choose a time", ""));
       timeInput.disabled = true;
+      calendarResult = undefined;
+      calendarFailure.hidden = true;
       resetReview();
       const service = prices.find((item) => item.id === serviceInput.value);
       serviceDetails.textContent = service ? `${service.duration} minutes / INR ${service.priceInr}` : "";
@@ -60,21 +83,53 @@ if (root) {
       }
       let slots;
       try {
-        slots = preferredSlots(dateInput.value, service.duration);
+        if (endpoint) {
+          status.textContent = "Checking Google Calendar availability...";
+          inFlight = new AbortController();
+          const result = await checkedAvailability(endpoint, service, dateInput.value, { signal: inFlight.signal });
+          if (request !== serial) return;
+          calendarResult = result;
+          slots = result.slots;
+        } else {
+          slots = preferredSlots(dateInput.value, service.duration);
+        }
       } catch (error) {
+        if (request !== serial) return;
+        if (endpoint) {
+          calendarFailure.hidden = false;
+          status.textContent = "Calendar availability could not be checked. No times have been marked as free.";
+          return;
+        }
         if (!(error instanceof RangeError)) throw error;
         dateInput.setCustomValidity(error.message);
         status.textContent = error.message;
         return;
       }
       if (!slots.length) {
-        status.textContent = "No future times remain within these hours. Choose another date.";
+        status.textContent = endpoint
+          ? "No calendar-free times fit this session on this date. Choose another date."
+          : "No future times remain within these hours. Choose another date.";
         return;
       }
       for (const slot of slots) timeInput.add(new Option(slot.label, slot.time));
       timeInput.disabled = false;
       if (slots.some((slot) => slot.time === previousTime)) timeInput.value = previousTime;
-      status.textContent = "Times follow the published hours, not live calendar availability.";
+      status.textContent = endpoint
+        ? "Google Calendar checked. A time is not held until the session is confirmed."
+        : "Times follow the published hours, not live calendar availability.";
+      if (wasReviewed && timeInput.value) {
+        const selection = validateSelection();
+        if (selection) {
+          showReview(selection);
+          if (reviewFocus && document.activeElement === document.body) reviewFocus.focus({ preventScroll: true });
+        }
+      } else if (wasReviewed && previousTime) {
+        status.textContent = "Your selected time is no longer available. Choose another time; no booking was created here.";
+      }
+    }
+
+    function calendarExpired() {
+      return endpoint && (!calendarResult || calendarResult.expiresAt <= Date.now());
     }
 
     function validateSelection() {
@@ -90,6 +145,11 @@ if (root) {
       }
       try {
         const slot = selectedSlot(dateInput.value, timeInput.value, service.duration);
+        if (endpoint && (calendarExpired() || !calendarResult.slots.some((item) => item.time === timeInput.value))) {
+          resetReview();
+          status.textContent = "Recheck calendar availability before continuing.";
+          return null;
+        }
         return { service, slot, date: dateInput.value };
       } catch (error) {
         if (!(error instanceof RangeError)) throw error;
@@ -119,15 +179,25 @@ if (root) {
       timeInput.setCustomValidity("");
       resetReview();
     });
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
+      const submitted = `${serviceInput.value}|${dateInput.value}|${timeInput.value}`;
+      if (calendarExpired()) await updateTimes();
+      if (`${serviceInput.value}|${dateInput.value}|${timeInput.value}` !== submitted
+        || (endpoint && (!calendarResult || timeInput.disabled))) return;
       const selection = validateSelection();
       if (!selection) return;
       showReview(selection);
       root.querySelector("#booking-review-title").focus();
     });
     for (const link of [emailLink, payLink]) {
-      link.addEventListener("click", (event) => {
+      link.addEventListener("click", async (event) => {
+        if (calendarExpired()) {
+          event.preventDefault();
+          await updateTimes({ preserveReview: true });
+          if (!review.hidden) status.textContent = "Availability refreshed. Review the session and open the link again to continue.";
+          return;
+        }
         const selection = validateSelection();
         if (!selection) {
           event.preventDefault();
@@ -138,6 +208,11 @@ if (root) {
       });
     }
     copyButton.addEventListener("click", async () => {
+      if (calendarExpired()) {
+        await updateTimes({ preserveReview: true });
+        if (!review.hidden) status.textContent = "Availability was rechecked. Review the session before copying the note again.";
+        return;
+      }
       const selection = validateSelection();
       if (!selection) return;
       showReview(selection);
@@ -160,12 +235,7 @@ if (root) {
     });
     function refreshClock() {
       if (document.hidden) return;
-      const wasReviewed = !review.hidden;
-      updateTimes();
-      if (wasReviewed && timeInput.value && !timeInput.disabled && dateInput.validity.valid) {
-        const selection = validateSelection();
-        if (selection) showReview(selection);
-      }
+      updateTimes({ preserveReview: true });
     }
     window.addEventListener("pageshow", refreshClock);
     document.addEventListener("visibilitychange", refreshClock);

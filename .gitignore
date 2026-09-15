@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+client_secret_*.json
+google-calendar-tokens.json
+calendar-runtime.json
+.playwright-mcp/

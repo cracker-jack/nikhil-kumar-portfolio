@@ -1,6 +1,6 @@
 # Nikhil Kumar - personal portfolio
 
-A dependency-free, static portfolio. Plain HTML, CSS, and progressive-enhancement scripts; no build step, package installation, trackers, cookies, or hosted backend.
+A dependency-free, static portfolio. Plain HTML, CSS, and progressive-enhancement scripts; no build step, package installation, trackers, cookies, or hosted backend. Local integration helpers run separately from the public site.
 
 ## Run locally
 
@@ -25,7 +25,7 @@ Open `http://127.0.0.1:4173/`. Stop the server with Ctrl+C.
 | `assets/styles.css` | Shared responsive styles and print layout |
 | `assets/visual.css` | Self-contained styles for the visual portfolio; does not restyle the classic pages |
 | `assets/site.js` | Keyboard-accessible mobile navigation and shared progressive carousel controls |
-| `assets/booking.js`, `assets/booking-slots.js` | Preferred date/time selection, review and hosted-payment handoff; not live calendar availability |
+| `assets/booking.js`, `assets/booking-slots.js`, `assets/availability-client.js` | Preferred date/time selection, optional read-only calendar checks, review and hosted-payment handoff |
 | `assets/favicon.svg` | Original abstract, non-letter icon |
 | `assets/social-card.svg` | Original 1200 x 630 social card |
 | `assets/social-card.png` | Browser-rasterized 1200 x 630 social sharing image |
@@ -84,15 +84,25 @@ The Topmate portion of the mentorship section is a dated, static snapshot of [Ni
 
 The classic homepage's `#direct-sessions` block lists the five user-approved session prices and durations. With JavaScript, it offers service/date/time selection, a review step, a prefilled email request and the user-supplied [Razorpay payment page](https://razorpay.me/@nikhilkumar7447). Without JavaScript, the original email-first/payment links remain available.
 
-- The form collects a local session preference only. It does not submit a booking to a server, store personal information or query Google. The payment action is a plain outbound link, not an embedded gateway, API checkout, payment-verification service or automatic calendar integration. It needs no API credentials in the portfolio.
+- The public payment page was inspected on 14 September 2026: it identifies the recipient as NIKHIL KUMAR and asks the customer to enter an amount and optional note. No payment was submitted.
+- The form collects a session preference, not a booking. With no backend URL it uses working hours only. When configured, it sends only the selected service/date to a separate read-only calendar API; it does not store personal information. The payment action is a plain outbound link, not an embedded gateway or payment-verification service. No credentials belong in the portfolio.
 - The page tells customers to agree a slot by email first, then enter the listed fee and service name on Razorpay. Payment alone does not automatically reserve a slot or send a calendar invitation.
 - Prices are mentorship INR 499 / 30 minutes, resume review INR 399 / 30 minutes, HLD and LLD mocks INR 999 each / 60 minutes, and coding/DSA mock INR 699 / 60 minutes. These are direct-session fees, not assertions about Topmate prices.
-- Update the five service rows in `index.html` together when changing prices or durations. The picker reads those rows instead of maintaining a separate browser price list.
-- The picker uses IST rather than the visitor's device timezone. It offers future-only, 30-minute-grid preferences during weekdays 16:00-23:00 and weekends 11:00-23:00, with every session finishing by 23:00. These are usual working hours, not checked calendar availability or reserved slots.
+- Keep the homepage price list synchronized with `APPROVED_PRICES_PAISE` and `SERVICES` in `integrations/razorpay/payment-model.mjs`. The hosted-link contract tests check those values together.
+- The picker uses IST rather than the visitor's device timezone, excludes past starts, and offers 30-minute-grid preferences that fit the selected duration and finish by 23:00. Its notice distinguishes working-hours-only mode from Google-checked times; neither reserves a slot.
 - Changing the selection clears the old review. Email/payment actions revalidate time before navigation. The Razorpay link opens in a new tab; the customer must manually enter the fee and paste the suggested note because the generic link does not transfer the selected date/time.
 - The hosted page controls its payment methods and terms. Do not claim that this generic link enforces UPI-only checkout, fixes the amount, binds a payment to a session, or signals successful payment back to this website. Do not invent prefill parameters or treat a redirect as proof of payment.
-- Browser modules use `.js` filenames for compatibility with static servers. No JavaScript or a failed module load leaves the email-first/payment fallback usable.
-- Live calendar availability, automatic reservations, payment verification and calendar invitations are not part of this static release.
+- The separate Test Mode API core remains isolated from this hosted link. Automatic bookings, payment reconciliation, calendar invitations, and confirmation emails still require a backend.
+
+### Google OAuth and secret storage
+
+See the [Google OAuth and availability API guide](integrations/calendar/README.md). The loopback helper provides the development callback `http://127.0.0.1:4174/oauth/google/callback`, verifies the owner account and saves authorization outside the publishing root. A separate Node API filters busy times from the configured calendar and returns eligible slots without exposing credentials or calendar details. The owner grants consent personally; neither helper creates events or sends invitations.
+
+For a local calendar-connected preview, run the API using the private environment file and open `http://127.0.0.1:4173/?calendar=local#direct-sessions`. The query switch is ignored on public hosts. The homepage's `data-availability-api` points to the verified Cloud Run availability endpoint. API failures block the live picker rather than silently treating all working hours as free. An expired payment review refreshes first and requires a second explicit click to continue.
+
+Cloud Run deployment uses an allowlisted six-file source bundle and a private Secret Manager runtime bundle. Reservations, payment reconciliation, invitations and confirmation emails remain separate work.
+
+Keep `.env`, OAuth client downloads and saved refresh tokens outside the repository. `.gitignore` guards against accidental commits but does not prevent a web server from serving files placed in its document root. The local credentials template is outside this repository with restricted Windows permissions; no real keys are included in website source.
 
 ## LinkedIn recommendations
 
@@ -107,6 +117,8 @@ The `#recommendations` section contains seven complete recommendations from Link
 
 ## Publishing
 
+The separate [Razorpay Test Mode integration core](integrations/razorpay/README.md) is server-side source for a future booking backend, with approved session prices configured in its server-side catalog. It is not loaded by either portfolio page and does not power the classic homepage's external Razorpay payment link. Test credentials, external backend/storage, and hosted checkout verification remain prerequisites for automated checkout and booking. No secrets or private payment data belong in this publishing root.
+
 The configured deployment target is [cracker-jack/nikhil-kumar-portfolio](https://github.com/cracker-jack/nikhil-kumar-portfolio), using GitHub Pages from the `main` branch and repository root. No build step is needed.
 
 The public base URL is:
@@ -119,4 +131,4 @@ If the domain or repository name changes, update those metadata values and the s
 
 GitHub authentication, repository changes, and publishing are managed separately. These configured URLs do not by themselves mean the site has been deployed.
 
-Only website files belong in the published folder. Keep browser captures, raw source documents, credentials, generators, and local validation artifacts outside it.
+Only reviewed website files and public integration source belong in this repository. Integration source is not a running payment application. Keep browser captures, raw source documents, credentials, customer/payment records, generators, and local validation artifacts outside the publishing root.

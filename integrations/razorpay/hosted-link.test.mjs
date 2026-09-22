@@ -27,6 +27,10 @@ test("Standard Checkout is explicit and no unverified hosted-payment fallback re
   assert.doesNotMatch(section, /razorpay\.me/i);
   assert.match(html, /data-booking-api="https:\/\/nikhil-bookings-api-otzn3ne7rq-el\.a\.run\.app"/);
   assert.match(section, /data-booking-pay>Pay with Razorpay/);
+  assert.match(section, /data-booking-confirmation/);
+  assert.match(section, /data-confirmation-booking-reference/);
+  assert.match(section, /data-confirmation-payment-reference/);
+  assert.match(section, /data-book-another/);
   assert.match(section, /id="direct-payment-note"/);
   assert.match(section, /Booking is confirmed only after verified payment\./);
   assert.match(section, /confirmed payments receive a Google Calendar invitation/i);

@@ -227,7 +227,7 @@ li + li { margin-top: .45rem; }
 .direct-payment-note { max-width: 78ch; margin: 1rem 0 0; color: var(--muted); font-size: .85rem; }
 .direct-payment-note strong { color: var(--ink); }
 .direct-payment-actions [hidden] { display: none; }
-.booking-notice { padding: 1rem; border-left: 3px solid var(--teal); background: var(--mint); font-size: .88rem; }
+.booking-notice { padding: 1rem; border: 1px solid var(--line); background: var(--mint); font-size: .88rem; }
 .booking-fields { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1.2fr); gap: 1rem; padding: 0; border: 0; margin: 1.4rem 0 0; min-width: 0; }
 .booking-fields legend { margin-bottom: .8rem; font-size: .94rem; font-weight: 600; }
 .booking-fields > div { min-width: 0; }
@@ -245,6 +245,13 @@ li + li { margin-top: .45rem; }
 .booking-review textarea { resize: vertical; font-size: .85rem; margin-bottom: .65rem; }
 .booking-review .actions { margin-top: 1rem; }
 .booking-transfer-note { font-size: .82rem; color: var(--muted); margin: 1rem 0 0; }
+.booking-confirmation { margin-top: 1.5rem; padding: clamp(1.25rem, 4vw, 2rem); border: 1px solid var(--teal); background: var(--mint); }
+.booking-confirmation-thanks { margin: 0 0 .35rem; color: var(--teal-dark); font-size: .82rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.booking-confirmation h4 { margin: 0 0 .75rem; font: clamp(1.8rem, 4vw, 2.5rem)/1.1 var(--serif); letter-spacing: -.035em; }
+.booking-confirmation > p:not(.booking-confirmation-thanks) { max-width: 68ch; color: var(--muted); }
+.booking-confirmation .booking-summary { margin-top: 1.4rem; padding-block: 1rem; border-block: 1px solid var(--line); }
+.booking-confirmation code { color: var(--ink); font-size: .82rem; overflow-wrap: anywhere; }
+.booking-confirmation .actions { margin-top: 1.4rem; }
 .mentorship-badges { border-top: 1px solid var(--line); padding-top: 1.5rem; margin-top: .2rem; }
 .badge-list { display: flex; flex-wrap: wrap; gap: .6rem; list-style: none; padding: 0; margin: 0 0 .8rem; }
 .badge-list li { padding: .4rem .8rem; border: 1px solid var(--line); border-radius: 3px; background: var(--white); font-size: .75rem; margin: 0; }
@@ -350,7 +357,7 @@ li + li { margin-top: .45rem; }
 .case-section p, .case-section li { color: var(--muted); font-size: 1rem; }
 .case-section strong { color: var(--ink); font-weight: 600; }
 .case-section p:last-child { margin-bottom: 0; }
-.scope-note { padding: 1.25rem 1.5rem; margin-block: 1.7rem; border-left: 3px solid var(--teal); background: var(--mint); }
+.scope-note { padding: 1.25rem 1.5rem; margin-block: 1.7rem; border: 1px solid var(--line); background: var(--mint); }
 .scope-note p { font-size: .88rem; margin: 0; }
 .principles { list-style: none; padding: 0; margin-block: 1.8rem 0; counter-reset: principles; }
 .principles li { counter-increment: principles; display: grid; grid-template-columns: 36px 1fr; gap: 1rem; padding-block: 1.25rem; border-top: 1px solid var(--line); margin: 0; }

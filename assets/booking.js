@@ -22,6 +22,15 @@ if (root) {
   const copyButton = root.querySelector("[data-copy-booking-note]");
   const copyStatus = root.querySelector("#booking-copy-status");
   const calendarFailure = root.querySelector("[data-calendar-failure]");
+  const confirmation = root.querySelector("[data-booking-confirmation]");
+  const confirmationTitle = root.querySelector("#booking-confirmation-title");
+  const confirmationMessage = root.querySelector("[data-confirmation-message]");
+  const confirmationService = root.querySelector("[data-confirmation-service]");
+  const confirmationTime = root.querySelector("[data-confirmation-time]");
+  const confirmationBookingReference = root.querySelector("[data-confirmation-booking-reference]");
+  const confirmationPaymentReference = root.querySelector("[data-confirmation-payment-reference]");
+  const confirmationCalendarLink = root.querySelector("[data-confirmation-calendar-link]");
+  const bookAnotherButton = root.querySelector("[data-book-another]");
   let endpoint = "";
   let bookingApi = "";
   let configurationError = false;
@@ -48,6 +57,8 @@ if (root) {
     let inFlight;
     let calendarResult;
     let razorpayScript;
+    let checkoutInProgress = false;
+    let bookingComplete = false;
     function enforceDateFloor() {
       const minimum = todayInIST();
       dateInput.min = minimum;
@@ -82,7 +93,46 @@ if (root) {
       copyStatus.textContent = "";
     }
 
+    function resetPicker() {
+      serial++;
+      inFlight?.abort();
+      inFlight = undefined;
+      calendarResult = undefined;
+      form.reset();
+      serviceDetails.textContent = "";
+      timeInput.replaceChildren(new Option("Choose a time", ""));
+      timeInput.disabled = true;
+      calendarFailure.hidden = true;
+      resetReview();
+    }
+
+    function showConfirmation(booking, selection, customer, response) {
+      bookingComplete = true;
+      checkoutInProgress = false;
+      const serviceName = booking.serviceName || selection.service.name;
+      const slotLabel = booking.slotLabel || selection.slot.label;
+      const customerEmail = booking.customerEmail || customer.email;
+      resetPicker();
+      form.hidden = true;
+      confirmationService.textContent = serviceName;
+      confirmationTime.textContent = `${booking.date || selection.date}, ${slotLabel} IST`;
+      confirmationBookingReference.textContent = booking.bookingId;
+      confirmationPaymentReference.textContent = booking.paymentReference || response.razorpay_payment_id;
+      confirmationMessage.textContent = `Payment is verified. A Google Calendar invitation was sent to ${customerEmail}. Keep the booking reference below if you need help.`;
+      if (booking.calendarEvent?.eventLink) {
+        confirmationCalendarLink.href = booking.calendarEvent.eventLink;
+        confirmationCalendarLink.hidden = false;
+      } else {
+        confirmationCalendarLink.removeAttribute("href");
+        confirmationCalendarLink.hidden = true;
+      }
+      confirmation.hidden = false;
+      status.textContent = "";
+      confirmationTitle.focus();
+    }
+
     async function updateTimes({ preserveReview = false } = {}) {
+      if (bookingComplete || checkoutInProgress) return;
       const request = ++serial;
       inFlight?.abort();
       inFlight = undefined;
@@ -245,10 +295,13 @@ if (root) {
         const intent = await createBookingIntent(bookingApi, selection, customer);
         await loadRazorpay();
         status.textContent = "Complete payment in Razorpay Checkout.";
+        checkoutInProgress = true;
         const options = {
           ...intent.checkout,
           modal: {
             ondismiss() {
+              if (bookingComplete) return;
+              checkoutInProgress = false;
               payLink.disabled = false;
               status.textContent = "Payment was not completed. No booking was confirmed.";
             },
@@ -259,15 +312,18 @@ if (root) {
               const booking = await confirmCheckout(bookingApi, response);
               payLink.disabled = false;
               if (booking.status === "confirmed") {
-                status.textContent = "Booking confirmed. A Google Calendar invitation has been sent to your email.";
+                showConfirmation(booking, selection, customer, response);
               } else if (booking.status === "paid_needs_manual_resolution") {
+                checkoutInProgress = false;
                 status.textContent = booking.resolutionReason === "calendar_invite_failed"
                   ? "Payment is verified, but Google Calendar could not send the invite. I will follow up by email."
                   : "Payment is verified, but the slot needs manual resolution. I will follow up by email.";
               } else {
+                checkoutInProgress = false;
                 status.textContent = "Payment is not captured yet. No booking is confirmed until Razorpay confirms capture.";
               }
             } catch {
+              checkoutInProgress = false;
               payLink.disabled = false;
               status.textContent = "Payment verification could not be completed here. If Razorpay charged you, I will reconcile it manually.";
             }
@@ -276,12 +332,14 @@ if (root) {
         const checkout = new window.Razorpay(options);
         if (typeof checkout.on === "function") {
           checkout.on("payment.failed", () => {
+            checkoutInProgress = false;
             payLink.disabled = false;
             status.textContent = "Payment failed in Razorpay. No booking was confirmed and no calendar invitation was sent.";
           });
         }
         checkout.open();
       } catch (error) {
+        checkoutInProgress = false;
         payLink.disabled = false;
         status.textContent = error?.code === "slot_unavailable"
           ? "That time is no longer available. Choose another slot."
@@ -351,8 +409,19 @@ if (root) {
         copyStatus.textContent = "Automatic copying is unavailable. Copy the selected note manually.";
       }
     });
+    bookAnotherButton.addEventListener("click", () => {
+      bookingComplete = false;
+      confirmation.hidden = true;
+      form.hidden = false;
+      confirmationCalendarLink.hidden = true;
+      confirmationCalendarLink.removeAttribute("href");
+      resetPicker();
+      enforceDateFloor();
+      status.textContent = "Choose a service and date to see preferred times in IST.";
+      serviceInput.focus();
+    });
     function refreshClock() {
-      if (document.hidden) return;
+      if (document.hidden || checkoutInProgress || bookingComplete) return;
       updateTimes({ preserveReview: true });
     }
     window.addEventListener("pageshow", refreshClock);

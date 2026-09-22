@@ -26,7 +26,7 @@ const callback = () => ({
 });
 
 function fixture(overrides = {}) {
-  const calls = { orders: 0, verify: 0, availability: 0, events: 0 };
+  const calls = { orders: 0, verify: 0, availability: 0, events: 0, logs: [] };
   const availabilityService = {
     async getAvailability(input) {
       calls.availability++;
@@ -78,6 +78,7 @@ function fixture(overrides = {}) {
       return new Response(JSON.stringify({ kind: "calendar#event", id: "event_fixture", htmlLink: "https://calendar.example.invalid/event" }));
     },
     now: () => NOW,
+    logger: (message) => calls.logs.push(message),
   });
   return { service, store, calls };
 }
@@ -136,6 +137,9 @@ test("captured checkout creates a calendar invitation and reports confirmed book
   });
   const booking = await service.confirmCheckout(callback());
   assert.equal(booking.status, "confirmed");
+  assert.equal(booking.serviceName, "Mentorship");
+  assert.equal(booking.slotLabel, "4:00 PM - 4:30 PM");
+  assert.equal(booking.paymentReference, "pay_BookingFixture");
   assert.equal(booking.calendarEvent.eventLink, "https://calendar.example.invalid/event");
   assert.equal(calls.verify, 1);
   assert.equal(calls.events, 1);
@@ -162,6 +166,17 @@ test("captured payment is flagged for manual resolution when invite creation fai
   assert.equal(booking.status, "paid_needs_manual_resolution");
   assert.equal(booking.resolutionReason, "calendar_invite_failed");
   assert.equal(calls.events, 1);
+  assert.deepEqual(calls.logs, ["CALENDAR_INVITE_FAILED: GOOGLE_REQUEST_FAILED"]);
+});
+
+test("booking checkout is disabled when authorization lacks Calendar event-write scope", () => {
+  assert.throws(() => createBookingService({
+    availabilityService: { getAvailability: async () => ({ slots: [slot] }) },
+    razorpay: { services: SERVICES },
+    store: new MemoryBookingStore(),
+    calendarConfig: { calendarId: "calendar@example.invalid" },
+    savedAuthorization: { scope: "https://www.googleapis.com/auth/calendar.events.freebusy" },
+  }), /Calendar event permission/);
 });
 
 test("uncaptured payment does not create a calendar event", async () => {

@@ -403,6 +403,21 @@
               </div>
               <p class="booking-transfer-note" id="booking-transfer-note">Payment opens Razorpay Checkout. After a verified captured payment, a Google Calendar invitation is sent to the email above. If confirmation cannot be completed automatically, the paid booking is flagged for manual resolution.</p>
             </div>
+            <div class="booking-confirmation" data-booking-confirmation role="region" aria-labelledby="booking-confirmation-title" hidden>
+              <p class="booking-confirmation-thanks">Thank you.</p>
+              <h4 id="booking-confirmation-title" tabindex="-1">Your session is confirmed</h4>
+              <p data-confirmation-message></p>
+              <dl class="booking-summary">
+                <div><dt>Session</dt><dd data-confirmation-service></dd></div>
+                <div><dt>Confirmed time</dt><dd data-confirmation-time></dd></div>
+                <div><dt>Booking reference</dt><dd><code data-confirmation-booking-reference></code></dd></div>
+                <div><dt>Payment reference</dt><dd><code data-confirmation-payment-reference></code></dd></div>
+              </dl>
+              <div class="actions">
+                <a class="button button-secondary" data-confirmation-calendar-link href="#" target="_blank" rel="noopener noreferrer" hidden>Open calendar event <span aria-hidden="true">&#8599;</span></a>
+                <button class="button button-primary" type="button" data-book-another>Book another session <span aria-hidden="true">&#8594;</span></button>
+              </div>
+            </div>
           </div>
           <div data-booking-fallback>
             <p>Direct payment requires the secure booking service. If it is unavailable, arrange your preferred date and time by email; do not send payment until the service is restored.</p>

@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { selectedSlot, todayInIST } from "../../assets/booking-slots.js";
 import { PaymentError, applyVerifiedPayment, createPaymentState, isRecord, verifyWebhook } from "../razorpay/payment-model.mjs";
 import { RazorpayApiClient } from "../razorpay/api-client.mjs";
-import { createCalendarEvent, refreshCalendarAccess, requireEventWriteScope } from "./google-oauth.mjs";
+import { CalendarAuthError, createCalendarEvent, refreshCalendarAccess, requireEventWriteScope } from "./google-oauth.mjs";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PAYMENT_HOLD_MS = 15 * 60 * 1000;
@@ -234,9 +234,12 @@ export function publicBooking(record) {
     bookingId: record.bookingId,
     status: record.status,
     serviceId: record.serviceId,
+    serviceName: record.serviceName,
     date: record.date,
     time: record.time,
+    slotLabel: record.slot?.label,
     customerEmail: record.customerEmail,
+    ...(record.payment?.paymentId ? { paymentReference: record.payment.paymentId } : {}),
     ...(record.resolutionReason ? { resolutionReason: record.resolutionReason } : {}),
     ...(record.calendarEvent ? { calendarEvent: { eventLink: record.calendarEvent.eventLink } } : {}),
   });
@@ -244,7 +247,7 @@ export function publicBooking(record) {
 
 export function createBookingService({
   availabilityService, razorpay, store = new MemoryBookingStore(), calendarConfig, savedAuthorization,
-  fetchImpl = globalThis.fetch, now = () => new Date(),
+  fetchImpl = globalThis.fetch, now = () => new Date(), logger = () => {},
 } = {}) {
   fail(availabilityService && typeof availabilityService.getAvailability === "function",
     "invalid_configuration", "Availability service is required.");
@@ -253,6 +256,7 @@ export function createBookingService({
     && typeof store.getByOrder === "function" && typeof store.findClaimedSlot === "function",
   "invalid_configuration", "Booking store is required.");
   fail(calendarConfig && savedAuthorization, "invalid_configuration", "Calendar configuration is required.");
+  requireEventWriteScope(savedAuthorization.scope);
   const slotLocks = new Map();
 
   async function withSlotLock(key, task) {
@@ -303,10 +307,12 @@ export function createBookingService({
           status: "confirmed", payment: { ...record.payment, ...payment }, calendarEvent,
           confirmedAt: now().toISOString(),
         });
-      } catch {
+      } catch (error) {
+        const resolutionDetail = error instanceof CalendarAuthError ? error.code : "UNKNOWN_CALENDAR_ERROR";
+        logger(`CALENDAR_INVITE_FAILED: ${resolutionDetail}`);
         return store.update(record.bookingId, {
           status: "paid_needs_manual_resolution", payment: { ...record.payment, ...payment },
-          resolutionReason: "calendar_invite_failed",
+          resolutionReason: "calendar_invite_failed", resolutionDetail,
         });
       }
     });

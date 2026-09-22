@@ -82,6 +82,10 @@ flowchart LR
 
 Creating a booking intent places a 15-minute server-side hold on the selected slot. A second checkout for that slot is rejected before another Razorpay order is created. Confirmed bookings and captured payments awaiting manual resolution continue to claim the slot until they are resolved.
 
+Checkout is disabled at backend startup unless the deployed Google authorization includes `calendar.events`. This fail-closed check prevents accepting a payment when the runtime credential can read availability but cannot create the customer invitation.
+
+After a confirmed callback, the browser replaces the form with a thank-you view containing the authoritative session time, booking reference, payment reference, and Calendar event link. The original form values are cleared, visibility changes from the Razorpay modal cannot overwrite the confirmation, and **Book another session** starts with an empty picker.
+
 ### Firestore record shape
 
 The booking store persists one document per booking ID. Key fields:

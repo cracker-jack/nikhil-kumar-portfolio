@@ -156,12 +156,13 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         });
         bookingService = createBookingService({
           availabilityService: service, razorpay, store, calendarConfig: config, savedAuthorization: saved,
+          logger: (message) => console.error(message),
         });
         if (process.env.RAZORPAY_WEBHOOK_SECRET) {
           webhookVerifier = (rawBody, headers) => verifyRazorpayWebhookFromEnv(process.env, rawBody, headers);
         }
       } catch (error) {
-        console.error(error instanceof BookingError || error instanceof PaymentError
+        console.error(error instanceof BookingError || error instanceof PaymentError || error instanceof CalendarAuthError
           ? `BOOKING_CONFIGURATION_DISABLED: ${error.code}`
           : "BOOKING_CONFIGURATION_DISABLED: UNKNOWN_ERROR");
       }

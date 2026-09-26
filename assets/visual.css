@@ -108,10 +108,6 @@ img { display: block; max-width: 100%; height: auto; }
 .mentor-quote { max-width: 860px; margin: 4rem auto 0; padding-top: 2.6rem; border-top: 1px solid #cdd8e4; }
 .mentor-quote blockquote { margin: 0; font-size: clamp(1.2rem, 2.1vw, 1.65rem); line-height: 1.5; font-weight: 500; letter-spacing: -.015em; }
 .mentor-quote figcaption { margin-block: 1.3rem .3rem; font-size: .8rem; color: #4c5e70; }
-.resume-section { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding-block: 4.5rem; }
-.resume-section h2 { font-size: 2rem; }
-.resume-section p { margin-top: .75rem; color: var(--muted); }
-.resume-section .actions { margin: 0; flex-shrink: 0; }
 .contact-section { padding-block: 5rem; background: #163d32; color: #f4faf5; text-align: center; }
 .contact-section :focus-visible { outline-color: #c5efde; }
 .contact-section h2 { font-size: clamp(3rem, 6vw, 5rem); }
@@ -136,7 +132,6 @@ img { display: block; max-width: 100%; height: auto; }
   .project-slide { gap: 2rem; padding: 2.3rem; }
   .project-copy h3 { font-size: 2.2rem; }
   .about-section, .mentorship-scene { gap: 2rem; }
-  .resume-section { align-items: flex-start; flex-direction: column; }
 }
 @media (max-width: 760px) {
   html { scroll-padding-top: 6rem; }
@@ -181,7 +176,6 @@ img { display: block; max-width: 100%; height: auto; }
   .mentorship-section { padding-block: 3.5rem; }
   .mentorship-scene { grid-template-columns: 1fr; gap: 2.2rem; margin-top: 2rem; }
   .mentor-quote { margin-top: 2.5rem; padding-top: 2rem; }
-  .resume-section { padding-block: 3rem; gap: 1.5rem; }
   .contact-section { padding-block: 3.5rem; }
   .contact-section h2 { font-size: clamp(2.5rem, 10vw, 3.5rem); }
   .footer-inner { flex-direction: column; align-items: flex-start; gap: .3rem; }
@@ -197,8 +191,8 @@ img { display: block; max-width: 100%; height: auto; }
   .site-header, .skip-link, .project-picker, .scroll-hint, .gallery-controls, .site-footer { display: none !important; }
   body { background: white; color: black; font-size: 11pt; }
   .wrap { width: 100%; }
-  .visual-hero, .work-section, .about-section, .mentorship-section, .resume-section, .contact-section { padding-block: 1.5rem; }
-  .hero-scene, .about-section, .mentorship-scene, .resume-section { display: block; }
+  .visual-hero, .work-section, .about-section, .mentorship-section, .contact-section { padding-block: 1.5rem; }
+  .hero-scene, .about-section, .mentorship-scene { display: block; }
   .hero-copy { padding: 1rem; }
   .hero-portrait, .about-portrait { max-width: 250px; }
   .project-track { display: block; overflow: visible; }

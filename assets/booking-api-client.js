@@ -28,6 +28,25 @@ async function postJson(endpoint, path, body) {
   return data;
 }
 
+export async function bookingCapabilities(endpoint) {
+  const response = await fetch(`${endpoint}/api/capabilities`, {
+    headers: { Accept: "application/json" },
+    credentials: "omit",
+    redirect: "error",
+  });
+  let data;
+  try { data = await response.json(); }
+  catch { throw new Error("The booking service returned unreadable capabilities."); }
+  if (!response.ok || typeof data?.bookingEnabled !== "boolean"
+    || typeof data?.whatsappConfirmationEnabled !== "boolean") {
+    throw new Error("The booking service returned invalid capabilities.");
+  }
+  return Object.freeze({
+    bookingEnabled: data.bookingEnabled,
+    whatsappConfirmationEnabled: data.whatsappConfirmationEnabled,
+  });
+}
+
 export async function createBookingIntent(endpoint, selection, customer) {
   const data = await postJson(endpoint, "/api/bookings/intent", {
     serviceId: selection.service.id,
@@ -35,6 +54,10 @@ export async function createBookingIntent(endpoint, selection, customer) {
     time: selection.slot.time,
     customerName: customer.name,
     customerEmail: customer.email,
+    ...(customer.whatsappConsent ? {
+      customerPhone: customer.phone,
+      whatsappConsent: true,
+    } : {}),
   });
   if (!data || typeof data !== "object" || !data.checkout || !data.booking
     || typeof data.checkout.key !== "string" || typeof data.checkout.order_id !== "string"

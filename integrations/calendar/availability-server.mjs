@@ -9,6 +9,7 @@ import {
   verifyRazorpayWebhookFromEnv,
 } from "./booking-service.mjs";
 import { PaymentError } from "../razorpay/payment-model.mjs";
+import { WhatsAppError, createWhatsAppFromEnv } from "../whatsapp/cloud-api.mjs";
 
 export function readPrivateCredentials(env) {
   try {
@@ -63,9 +64,18 @@ export function createAvailabilityServer(service, {
     if (origin && !origins.has(origin)) return send(res, 403, { error: "origin_not_allowed" });
     if (req.url === "/healthz" && req.method === "GET") return send(res, 200, { status: "ok" }, origin);
     const route = req.url?.split("?")[0];
-    const routes = new Set(["/api/availability", "/api/bookings/intent", "/api/payments/checkout-callback", "/api/razorpay/webhook"]);
+    const routes = new Set([
+      "/api/capabilities", "/api/availability", "/api/bookings/intent",
+      "/api/payments/checkout-callback", "/api/razorpay/webhook",
+    ]);
     if (!routes.has(route)) return send(res, 404, { error: "not_found" }, origin);
     if (req.url !== route) return send(res, 404, { error: "not_found" }, origin);
+    if (route === "/api/capabilities" && req.method === "GET") {
+      return send(res, 200, bookingService?.capabilities?.() || {
+        bookingEnabled: false,
+        whatsappConfirmationEnabled: false,
+      }, origin);
+    }
     if (req.method === "OPTIONS") {
       return send(res, 204, {}, origin, {
         "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type",
@@ -154,8 +164,17 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           projectId: process.env.BOOKINGS_PROJECT_ID,
           databaseId: process.env.FIRESTORE_DATABASE_ID || "(default)",
         });
+        let whatsapp = null;
+        try {
+          whatsapp = createWhatsAppFromEnv(process.env);
+        } catch (error) {
+          console.error(error instanceof WhatsAppError
+            ? `WHATSAPP_CONFIGURATION_DISABLED: ${error.code}`
+            : "WHATSAPP_CONFIGURATION_DISABLED: UNKNOWN_ERROR");
+        }
         bookingService = createBookingService({
           availabilityService: service, razorpay, store, calendarConfig: config, savedAuthorization: saved,
+          whatsapp,
           logger: (message) => console.error(message),
         });
         if (process.env.RAZORPAY_WEBHOOK_SECRET) {
@@ -175,7 +194,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         : `Read-only calendar availability API listening on port ${port}. No booking or payment writes are enabled.`);
     });
   } catch (error) {
-    if (error instanceof CalendarAuthError || error instanceof BookingError || error instanceof PaymentError) {
+    if (error instanceof CalendarAuthError || error instanceof BookingError
+      || error instanceof PaymentError || error instanceof WhatsAppError) {
       console.error(`${error.code}: ${error.message}`);
     } else {
       console.error("Availability API configuration is invalid.");

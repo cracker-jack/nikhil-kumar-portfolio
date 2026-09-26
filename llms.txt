@@ -1,0 +1,55 @@
+# Nikhil Kumar
+
+> Official portfolio of Nikhil Kumar, Software Engineer II at Microsoft in India. The site documents verified experience building reliable distributed systems, cloud consumption billing, reporting, product trials, enterprise migration tooling, and practical mentorship.
+
+## Canonical profile
+
+- Name: Nikhil Kumar
+- Current role: Software Engineer II at Microsoft
+- Location: India
+- Experience: 8+ years in software engineering
+- Email: kumarnikhil374@gmail.com
+- LinkedIn: https://www.linkedin.com/in/nikhilkr96/
+- Mentorship: https://topmate.io/nikhil_kr
+- Education: B.E., Netaji Subhas Institute of Technology, University of Delhi, 2014-2018
+
+## Core expertise
+
+- Distributed systems, microservices, event-driven architecture, multi-region delivery, data correctness, and network security
+- Java, C#, Scala, Python, JavaScript, and PowerShell
+- .NET, Spring Boot, Apache Spark, Service Fabric, React, and WPF
+- Azure Event Hubs, ADLS Gen2, Redis, Kusto, Azure Data Explorer, and Key Vault
+
+## Selected work
+
+1. [Consumption Billing System](https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/billing-system.html)
+   - Multi-region Microsoft Purview consumption billing pipeline integrating 6+ cloud services.
+   - Scala/Spark aggregation and C#/.NET Service Fabric delivery to Microsoft commerce.
+   - Three-layer deduplication protects invoice accuracy.
+2. [Consumption Reporting](https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/reporting.html)
+   - Deterministic billing aggregates linked to raw usage for traceability and auditability.
+   - Separates platform capabilities from Nikhil's billing-pipeline delivery and engineering-summit presentation.
+3. [Free Trials and Adoption](https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/free-trials.html)
+   - Launched trials across 16 offerings and reached 3,981 of 5,000 targeted tenants.
+   - Active consuming tenants grew from 77 to 234 in six weeks.
+4. [DLP Migration Assistant](https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/migration-assistant.html)
+   - Co-owned the backend and built the mapping engine for a publicly shipped Microsoft Purview migration tool.
+   - Used by 40+ enterprise customers, each with 1,000+ policies.
+
+## Career
+
+- Microsoft — Software Engineer II, March 2022-present
+- Salesforce — Member of Technical Staff, March 2021-March 2022
+- MakeMyTrip — Software Engineer, July 2018-February 2021
+
+## Site pages
+
+- [Portfolio home](https://cracker-jack.github.io/nikhil-kumar-portfolio/)
+- [Visual portfolio](https://cracker-jack.github.io/nikhil-kumar-portfolio/explore.html)
+- [Sitemap](https://cracker-jack.github.io/nikhil-kumar-portfolio/sitemap.xml)
+
+## Accuracy notes
+
+- Metrics and contribution boundaries are stated on each case-study page.
+- No internal Microsoft architecture, links, credentials, or proprietary topology are published.
+- LinkedIn and Topmate are external sources and may change independently of this portfolio.

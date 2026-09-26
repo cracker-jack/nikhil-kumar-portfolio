@@ -20,12 +20,13 @@ test("deployment packaging includes only allowlisted runtime source files and re
   assert.equal(run(destination).status, 0);
   const files = readdirSync(destination, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile()).map((entry) => join(entry.parentPath, entry.name));
-  assert.equal(files.length, 8);
+  assert.equal(files.length, 9);
   const expected = [
     ["Dockerfile", "integrations", "calendar", "Dockerfile"],
     ["assets/booking-slots.js", "assets", "booking-slots.js"],
     ["integrations/razorpay/payment-model.mjs", "integrations", "razorpay", "payment-model.mjs"],
     ["integrations/razorpay/api-client.mjs", "integrations", "razorpay", "api-client.mjs"],
+    ["integrations/whatsapp/cloud-api.mjs", "integrations", "whatsapp", "cloud-api.mjs"],
     ...["google-oauth.mjs", "availability.mjs", "booking-service.mjs", "availability-server.mjs"].map((file) => [`integrations/calendar/${file}`, "integrations", "calendar", file]),
   ];
   for (const [target, ...source] of expected) {

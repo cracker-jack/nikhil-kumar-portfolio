@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cracker-jack.github.io/nikhil-kumar-portfolio/sitemap.xml

@@ -196,6 +196,12 @@ test("HTTP routes, exact CORS, methods and malformed bodies are guarded", async 
   assert.equal(preflight.status, 204);
   assert.equal(preflight.headers.get("Access-Control-Allow-Methods"), "POST, OPTIONS");
   assert.equal((await fetch(`${url}/healthz`)).status, 200);
+  const capabilities = await fetch(`${url}/api/capabilities`, { headers: { Origin: allowed } });
+  assert.equal(capabilities.status, 200);
+  assert.deepEqual(await capabilities.json(), {
+    bookingEnabled: false,
+    whatsappConfirmationEnabled: false,
+  });
   for (const path of ["/.env", "/google-calendar-tokens.json", "/api/events", "/api/availability?calendarId=other"]) {
     assert.equal((await fetch(url + path)).status, 404);
   }
@@ -237,6 +243,11 @@ test("HTTP errors never expose provider messages, and rate limits reset", async 
 test("HTTP booking callback and webhook routes mimic gateway success and failure safely", async (t) => {
   const calls = [];
   const bookingService = {
+    capabilities: () => ({
+      bookingEnabled: true,
+      whatsappConfirmationEnabled: true,
+      whatsappConsentVersion: "booking-confirmation-v1",
+    }),
     createIntent: async (value) => {
       calls.push(["intent", value]);
       return { booking: { status: "payment_created" }, checkout: { order_id: "order_Offline" } };
@@ -255,8 +266,11 @@ test("HTTP booking callback and webhook routes mimic gateway success and failure
     calls.push(["raw-webhook", rawBody.toString("utf8"), headers["x-razorpay-event-id"]]);
     return JSON.parse(rawBody.toString("utf8"));
   };
-  const { postPath } = await serverFixture(t, undefined, { bookingService, webhookVerifier });
+  const { postPath, url } = await serverFixture(t, undefined, { bookingService, webhookVerifier });
   const allowed = "https://cracker-jack.github.io";
+  const capabilities = await fetch(`${url}/api/capabilities`, { headers: { Origin: allowed } });
+  assert.equal(capabilities.status, 200);
+  assert.equal((await capabilities.json()).whatsappConfirmationEnabled, true);
   const intent = await postPath("/api/bookings/intent", JSON.stringify({ serviceId: "mentorship" }), { Origin: allowed });
   assert.equal(intent.status, 200);
   assert.equal((await intent.json()).booking.status, "payment_created");

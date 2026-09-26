@@ -1,9 +1,12 @@
-import { paymentNote, preferredSlots, selectedSlot, todayInIST } from "./booking-slots.js";
+import { preferredSlots, selectedSlot, todayInIST } from "./booking-slots.js";
 import { availabilityEndpoint, checkedAvailability } from "./availability-client.js";
-import { bookingEndpoint, confirmCheckout, createBookingIntent } from "./booking-api-client.js";
+import {
+  bookingCapabilities, bookingEndpoint, confirmCheckout, createBookingIntent,
+} from "./booking-api-client.js";
 
 const root = document.querySelector("#direct-sessions");
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const E164_PATTERN = /^\+[1-9]\d{7,14}$/;
 if (root) {
   const picker = root.querySelector("[data-slot-picker]");
   const fallback = root.querySelector("[data-booking-fallback]");
@@ -14,14 +17,20 @@ if (root) {
   const timeInput = root.querySelector("#booking-time");
   const status = root.querySelector("#booking-status");
   const review = root.querySelector("[data-booking-review]");
-  const note = root.querySelector("#booking-note");
   const payLink = root.querySelector("[data-booking-pay]");
   const nameInput = root.querySelector("#booking-name");
   const emailInput = root.querySelector("#booking-email");
   const customerFields = root.querySelectorAll("[data-customer-field]");
-  const copyButton = root.querySelector("[data-copy-booking-note]");
-  const copyStatus = root.querySelector("#booking-copy-status");
+  const whatsappOption = root.querySelector("[data-whatsapp-option]");
+  const whatsappConsent = root.querySelector("#booking-whatsapp-consent");
+  const whatsappPhoneGroup = root.querySelector("[data-whatsapp-phone]");
+  const whatsappPhone = root.querySelector("#booking-phone");
   const calendarFailure = root.querySelector("[data-calendar-failure]");
+  const slotOptions = root.querySelector("[data-slot-options]");
+  const timeSelect = root.querySelector(".booking-time-select");
+  const serviceOutcome = root.querySelector("[data-service-outcome]");
+  const serviceOutcomeCopy = root.querySelector("[data-service-outcome-copy]");
+  const slotRecovery = root.querySelector("[data-slot-recovery]");
   const confirmation = root.querySelector("[data-booking-confirmation]");
   const confirmationTitle = root.querySelector("#booking-confirmation-title");
   const confirmationMessage = root.querySelector("[data-confirmation-message]");
@@ -30,6 +39,7 @@ if (root) {
   const confirmationBookingReference = root.querySelector("[data-confirmation-booking-reference]");
   const confirmationPaymentReference = root.querySelector("[data-confirmation-payment-reference]");
   const confirmationCalendarLink = root.querySelector("[data-confirmation-calendar-link]");
+  const confirmationWhatsApp = root.querySelector("[data-confirmation-whatsapp]");
   const bookAnotherButton = root.querySelector("[data-book-another]");
   let endpoint = "";
   let bookingApi = "";
@@ -47,6 +57,13 @@ if (root) {
     duration: Number.parseInt(row.querySelector("dt span").textContent, 10),
     priceInr: Number(row.querySelector("data").value),
   }));
+  const serviceOutcomes = Object.freeze({
+    mentorship: "Bring a career decision, interview plan, or engineering question to work through together.",
+    "resume-review": "Bring your current resume to review its clarity, evidence, and alignment with the roles you want.",
+    "hld-mock": "Practice a high-level design interview and discuss requirements, trade-offs, and how you communicate your approach.",
+    "lld-mock": "Practice designing a focused component with attention to interfaces, edge cases, and the reasoning behind your choices.",
+    "dsa-mock": "Work through a coding problem and discuss your approach, complexity, trade-offs, and interview communication.",
+  });
 
   if (configurationError || prices.length !== 5 || new Set(prices.map((service) => service.id)).size !== 5
     || prices.some((service) => !service.name || ![30, 60].includes(service.duration)
@@ -81,6 +98,11 @@ if (root) {
       for (const field of customerFields) field.hidden = false;
       nameInput.required = true;
       emailInput.required = true;
+      bookingCapabilities(bookingApi).then((capabilities) => {
+        if (capabilities.whatsappConfirmationEnabled) whatsappOption.hidden = false;
+      }).catch(() => {
+        whatsappOption.hidden = true;
+      });
     }
     for (const service of prices) {
       const optionName = service.id === "dsa-mock" ? "Coding / DSA interview" : service.name;
@@ -89,8 +111,82 @@ if (root) {
 
     function resetReview() {
       review.hidden = true;
-      note.value = "";
-      copyStatus.textContent = "";
+    }
+
+    function resetSlotOptions() {
+      slotOptions.replaceChildren();
+      slotOptions.hidden = true;
+      timeSelect.hidden = false;
+    }
+
+    function updateServiceOutcome(service) {
+      const outcome = service && serviceOutcomes[service.id];
+      serviceOutcome.hidden = !outcome;
+      serviceOutcomeCopy.textContent = outcome || "";
+    }
+
+    function updateSlotRecovery(service) {
+      if (!service || !dateInput.value) {
+        slotRecovery.hidden = true;
+        return;
+      }
+      const subject = `Direct session request: ${service.name}`;
+      const body = [
+        "Hello Nikhil,",
+        "",
+        `I would like to book a ${service.name} session.`,
+        `My preferred date is ${dateInput.value} (IST).`,
+        "Please share another available time.",
+      ].join("\n");
+      const link = slotRecovery.querySelector("a");
+      link.href = `mailto:kumarnikhil374@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      slotRecovery.hidden = false;
+    }
+
+    function renderSlotOptions(slots) {
+      resetSlotOptions();
+      const groups = new Map();
+      for (const slot of slots) {
+        const hour = Number.parseInt(slot.time.slice(0, 2), 10);
+        const label = hour < 18 ? "Daytime" : "Evening";
+        if (!groups.has(label)) groups.set(label, []);
+        groups.get(label).push(slot);
+      }
+      for (const [label, groupSlots] of groups) {
+        const group = document.createElement("div");
+        group.className = "booking-slot-group";
+        const heading = document.createElement("p");
+        heading.className = "booking-slot-group-title";
+        heading.textContent = label;
+        const chips = document.createElement("div");
+        chips.className = "booking-slot-chips";
+        for (const slot of groupSlots) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "booking-slot-chip";
+          button.dataset.slotTime = slot.time;
+          button.setAttribute("aria-pressed", "false");
+          button.textContent = slot.label;
+          chips.append(button);
+        }
+        group.append(heading, chips);
+        slotOptions.append(group);
+      }
+      timeSelect.hidden = true;
+      slotOptions.hidden = false;
+    }
+
+    function selectSlot(time, { reset = true } = {}) {
+      timeInput.value = time;
+      for (const button of slotOptions.querySelectorAll("[data-slot-time]")) {
+        const selected = button.dataset.slotTime === time;
+        button.classList.toggle("is-selected", selected);
+        button.setAttribute("aria-pressed", String(selected));
+      }
+      if (reset) {
+        timeInput.setCustomValidity("");
+        resetReview();
+      }
     }
 
     function resetPicker() {
@@ -102,8 +198,14 @@ if (root) {
       serviceDetails.textContent = "";
       timeInput.replaceChildren(new Option("Choose a time", ""));
       timeInput.disabled = true;
+      resetSlotOptions();
+      updateServiceOutcome();
       calendarFailure.hidden = true;
+      slotRecovery.hidden = true;
       resetReview();
+      whatsappPhoneGroup.hidden = true;
+      whatsappPhone.required = false;
+      whatsappPhone.setCustomValidity("");
     }
 
     function showConfirmation(booking, selection, customer, response) {
@@ -119,6 +221,15 @@ if (root) {
       confirmationBookingReference.textContent = booking.bookingId;
       confirmationPaymentReference.textContent = booking.paymentReference || response.razorpay_payment_id;
       confirmationMessage.textContent = `Payment is verified. A Google Calendar invitation was sent to ${customerEmail}. Keep the booking reference below if you need help.`;
+      if (booking.whatsapp?.requested) {
+        confirmationWhatsApp.textContent = booking.whatsapp.status === "sent"
+          ? `A WhatsApp confirmation was also sent to ${customer.phone}.`
+          : "Your booking is confirmed, but the optional WhatsApp confirmation could not be sent. Your email and calendar invitation remain valid.";
+        confirmationWhatsApp.hidden = false;
+      } else {
+        confirmationWhatsApp.hidden = true;
+        confirmationWhatsApp.textContent = "";
+      }
       if (booking.calendarEvent?.eventLink) {
         confirmationCalendarLink.href = booking.calendarEvent.eventLink;
         confirmationCalendarLink.hidden = false;
@@ -144,13 +255,16 @@ if (root) {
       timeInput.setCustomValidity("");
       timeInput.replaceChildren(new Option("Choose a time", ""));
       timeInput.disabled = true;
+      resetSlotOptions();
       calendarResult = undefined;
       calendarFailure.hidden = true;
+      slotRecovery.hidden = true;
       resetReview();
       const service = prices.find((item) => item.id === serviceInput.value);
       serviceDetails.textContent = service ? `${service.duration} minutes / INR ${service.priceInr}` : "";
+      updateServiceOutcome(service);
       if (!service || !dateInput.value) {
-        status.textContent = "Choose a service and date to see preferred times in IST.";
+        status.textContent = "Choose a session and date to see calendar-checked times in IST.";
         return;
       }
       if (dateInput.value < minimumDate) {
@@ -184,15 +298,17 @@ if (root) {
       }
       if (!slots.length) {
         status.textContent = endpoint
-          ? "No calendar-free times fit this session on this date. Choose another date."
+          ? "No calendar-free times fit this session on this date. Choose another date or request another time by email."
           : "No future times remain within these hours. Choose another date.";
+        if (endpoint) updateSlotRecovery(service);
         return;
       }
       for (const slot of slots) timeInput.add(new Option(slot.label, slot.time));
       timeInput.disabled = false;
-      if (slots.some((slot) => slot.time === previousTime)) timeInput.value = previousTime;
+      renderSlotOptions(slots);
+      if (slots.some((slot) => slot.time === previousTime)) selectSlot(previousTime, { reset: false });
       status.textContent = endpoint
-        ? "Google Calendar checked. A time is not held until the session is confirmed."
+        ? "Calendar checked. Select a time to continue."
         : "Times follow the published hours, not live calendar availability.";
       if (wasReviewed && timeInput.value) {
         const selection = validateSelection();
@@ -250,9 +366,8 @@ if (root) {
       root.querySelector("[data-review-service]").textContent = `${service.name} (${service.duration} minutes)`;
       root.querySelector("[data-review-date]").textContent = `${date}, ${slot.label} IST`;
       root.querySelector("[data-review-price]").textContent = `INR ${service.priceInr}`;
-      note.value = paymentNote(service, date, slot);
       review.hidden = false;
-      status.textContent = bookingApi ? "Ready for payment. The slot is still rechecked before Checkout opens." : "Preference ready to review. No slot has been reserved.";
+      status.textContent = bookingApi ? "Review the session details, then continue to secure payment." : "Review the session details. No payment has been started.";
     }
 
     function customerDetails() {
@@ -271,7 +386,17 @@ if (root) {
         emailInput.setCustomValidity("");
         return null;
       }
-      return { name, email };
+      if (!whatsappOption.hidden && whatsappConsent.checked) {
+        const phone = whatsappPhone.value.trim().replace(/[\s()-]/g, "");
+        if (!E164_PATTERN.test(phone)) {
+          whatsappPhone.setCustomValidity("Use international format, such as +919876543210.");
+          whatsappPhone.reportValidity();
+          whatsappPhone.setCustomValidity("");
+          return null;
+        }
+        return { name, email, phone, whatsappConsent: true };
+      }
+      return { name, email, whatsappConsent: false };
     }
 
     function loadRazorpay() {
@@ -352,8 +477,19 @@ if (root) {
     dateInput.addEventListener("click", enforceDateFloor);
     dateInput.addEventListener("input", updateTimes);
     timeInput.addEventListener("change", () => {
-      timeInput.setCustomValidity("");
-      resetReview();
+      selectSlot(timeInput.value);
+    });
+    slotOptions.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-slot-time]");
+      if (!button) return;
+      selectSlot(button.dataset.slotTime);
+    });
+    whatsappConsent.addEventListener("change", () => {
+      whatsappPhoneGroup.hidden = !whatsappConsent.checked;
+      whatsappPhone.required = whatsappConsent.checked;
+      whatsappPhone.setCustomValidity("");
+      if (whatsappConsent.checked) whatsappPhone.focus();
+      else whatsappPhone.value = "";
     });
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -383,41 +519,17 @@ if (root) {
       if (bookingApi && customer) await startCheckout(selection, customer);
       else if (!bookingApi) status.textContent = "Secure Razorpay Checkout is unavailable. No payment was started.";
     });
-    copyButton.addEventListener("click", async () => {
-      if (calendarExpired()) {
-        await updateTimes({ preserveReview: true });
-        if (!review.hidden) status.textContent = "Availability was rechecked. Review the session before copying the note again.";
-        return;
-      }
-      const selection = validateSelection();
-      if (!selection) return;
-      showReview(selection);
-      const copiedNote = note.value;
-      try {
-        if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable.");
-        await navigator.clipboard.writeText(copiedNote);
-        if (note.value === copiedNote && !review.hidden) {
-          copyStatus.textContent = "Payment note copied. Paste it into the note field on Razorpay.";
-        }
-      } catch {
-        if (note.value !== copiedNote || review.hidden) {
-          status.textContent = "The selection changed. Review the session again before copying its note.";
-          return;
-        }
-        note.focus();
-        note.select();
-        copyStatus.textContent = "Automatic copying is unavailable. Copy the selected note manually.";
-      }
-    });
     bookAnotherButton.addEventListener("click", () => {
       bookingComplete = false;
       confirmation.hidden = true;
       form.hidden = false;
       confirmationCalendarLink.hidden = true;
       confirmationCalendarLink.removeAttribute("href");
+      confirmationWhatsApp.hidden = true;
+      confirmationWhatsApp.textContent = "";
       resetPicker();
       enforceDateFloor();
-      status.textContent = "Choose a service and date to see preferred times in IST.";
+      status.textContent = "Choose a session and date to see calendar-checked times in IST.";
       serviceInput.focus();
     });
     function refreshClock() {

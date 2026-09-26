@@ -5,7 +5,12 @@ import { RazorpayApiClient } from "../razorpay/api-client.mjs";
 import { CalendarAuthError, createCalendarEvent, refreshCalendarAccess, requireEventWriteScope } from "./google-oauth.mjs";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const E164 = /^\+[1-9]\d{7,14}$/;
 const PAYMENT_HOLD_MS = 15 * 60 * 1000;
+const WHATSAPP_CONSENT_VERSION = "booking-confirmation-v1";
+const DATE_FORMAT = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata",
+});
 
 function claimsSlot(record, at = new Date()) {
   if (["confirmed", "paid_needs_manual_resolution"].includes(record?.status)) return true;
@@ -42,9 +47,23 @@ function cleanEmail(value) {
   return email;
 }
 
+function cleanWhatsApp(input) {
+  if (input.whatsappConsent !== true) {
+    fail(input.whatsappConsent === undefined && input.customerPhone === undefined,
+      "invalid_whatsapp_consent", "WhatsApp consent is required before supplying a phone number.");
+    return null;
+  }
+  fail(typeof input.customerPhone === "string", "invalid_phone", "WhatsApp phone number is required.");
+  const phone = input.customerPhone.trim().replace(/[\s()-]/g, "");
+  fail(E164.test(phone), "invalid_phone", "Use a WhatsApp number in international format, such as +919876543210.");
+  return phone;
+}
+
 export function validateBookingIntent(input, services, now = new Date()) {
   fail(isRecord(input), "invalid_request", "Provide booking details.");
-  fail(Object.keys(input).every((key) => ["serviceId", "date", "time", "customerName", "customerEmail"].includes(key)),
+  fail(Object.keys(input).every((key) => [
+    "serviceId", "date", "time", "customerName", "customerEmail", "customerPhone", "whatsappConsent",
+  ].includes(key)),
     "invalid_request", "Unexpected booking fields were supplied.");
   const service = services.find((item) => item.id === input.serviceId);
   fail(service, "invalid_service", "Choose a listed service.");
@@ -59,6 +78,7 @@ export function validateBookingIntent(input, services, now = new Date()) {
     service, date: input.date, time: input.time, slot,
     customerName: cleanText(input.customerName, "invalid_name", "Name"),
     customerEmail: cleanEmail(input.customerEmail),
+    whatsappPhone: cleanWhatsApp(input),
   };
 }
 
@@ -242,12 +262,18 @@ export function publicBooking(record) {
     ...(record.payment?.paymentId ? { paymentReference: record.payment.paymentId } : {}),
     ...(record.resolutionReason ? { resolutionReason: record.resolutionReason } : {}),
     ...(record.calendarEvent ? { calendarEvent: { eventLink: record.calendarEvent.eventLink } } : {}),
+    ...(record.whatsapp ? {
+      whatsapp: {
+        requested: true,
+        status: record.whatsappDelivery?.status || "pending",
+      },
+    } : {}),
   });
 }
 
 export function createBookingService({
   availabilityService, razorpay, store = new MemoryBookingStore(), calendarConfig, savedAuthorization,
-  fetchImpl = globalThis.fetch, now = () => new Date(), logger = () => {},
+  whatsapp = null, fetchImpl = globalThis.fetch, now = () => new Date(), logger = () => {},
 } = {}) {
   fail(availabilityService && typeof availabilityService.getAvailability === "function",
     "invalid_configuration", "Availability service is required.");
@@ -257,6 +283,8 @@ export function createBookingService({
   "invalid_configuration", "Booking store is required.");
   fail(calendarConfig && savedAuthorization, "invalid_configuration", "Calendar configuration is required.");
   requireEventWriteScope(savedAuthorization.scope);
+  fail(whatsapp === null || typeof whatsapp?.sendBookingConfirmation === "function",
+    "invalid_configuration", "WhatsApp notifier is invalid.");
   const slotLocks = new Map();
 
   async function withSlotLock(key, task) {
@@ -303,10 +331,38 @@ export function createBookingService({
           customerName: record.customerName, customerEmail: record.customerEmail,
           start: record.slot.start, end: record.slot.end,
         }, fetchImpl);
-        return store.update(record.bookingId, {
+        const confirmed = await store.update(record.bookingId, {
           status: "confirmed", payment: { ...record.payment, ...payment }, calendarEvent,
           confirmedAt: now().toISOString(),
         });
+        if (!confirmed.whatsapp || !whatsapp) return confirmed;
+        try {
+          const delivery = await whatsapp.sendBookingConfirmation({
+            phone: confirmed.whatsapp.phone,
+            customerName: confirmed.customerName,
+            serviceName: confirmed.serviceName,
+            confirmedTime: `${DATE_FORMAT.format(new Date(`${confirmed.date}T00:00:00+05:30`))}, ${confirmed.slot.label} IST`,
+            bookingId: confirmed.bookingId,
+            paymentReference: confirmed.payment.paymentId,
+          });
+          return store.update(confirmed.bookingId, {
+            whatsappDelivery: {
+              status: "sent",
+              messageId: delivery.messageId,
+              sentAt: now().toISOString(),
+            },
+          });
+        } catch (error) {
+          const code = typeof error?.code === "string" ? error.code : "unknown_whatsapp_error";
+          logger(`WHATSAPP_CONFIRMATION_FAILED: ${code}`);
+          return store.update(confirmed.bookingId, {
+            whatsappDelivery: {
+              status: "failed",
+              errorCode: code,
+              attemptedAt: now().toISOString(),
+            },
+          });
+        }
       } catch (error) {
         const resolutionDetail = error instanceof CalendarAuthError ? error.code : "UNKNOWN_CALENDAR_ERROR";
         logger(`CALENDAR_INVITE_FAILED: ${resolutionDetail}`);
@@ -319,8 +375,18 @@ export function createBookingService({
   }
 
   return {
+    capabilities() {
+      return Object.freeze({
+        bookingEnabled: true,
+        whatsappConfirmationEnabled: Boolean(whatsapp),
+        whatsappConsentVersion: WHATSAPP_CONSENT_VERSION,
+      });
+    },
+
     async createIntent(input) {
       const selection = validateBookingIntent(input, razorpay.services, now());
+      fail(!selection.whatsappPhone || whatsapp, "whatsapp_unavailable",
+        "WhatsApp confirmation is not currently available.", 503);
       return withSlotLock(`${selection.date}|${selection.time}`, async () => {
         const existing = await store.findClaimedSlot(selection, now());
         fail(!existing, "slot_unavailable", "That time is already reserved. Choose another slot.", 409);
@@ -338,6 +404,14 @@ export function createBookingService({
           serviceId: selection.service.id, serviceName: selection.service.name,
           date: selection.date, time: selection.time, slot: selection.slot,
           customerName: selection.customerName, customerEmail: selection.customerEmail,
+          ...(selection.whatsappPhone ? {
+            whatsapp: {
+              phone: selection.whatsappPhone,
+              consented: true,
+              consentVersion: WHATSAPP_CONSENT_VERSION,
+              consentedAt: createdAt.toISOString(),
+            },
+          } : {}),
           order, payment: createPaymentState(order),
         };
         await store.create(record);

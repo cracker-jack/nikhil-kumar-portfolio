@@ -7,6 +7,9 @@
   <title>Nikhil Kumar | Software Engineer II at Microsoft</title>
   <link rel="canonical" href="https://cracker-jack.github.io/nikhil-kumar-portfolio/">
   <meta name="description" content="Nikhil Kumar, Software Engineer II at Microsoft. Explore distributed systems work and connect for career mentorship, interview preparation, and guidance on Topmate.">
+  <meta name="author" content="Nikhil Kumar">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <link rel="alternate" type="text/plain" href="llms.txt" title="LLM-readable portfolio summary">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Nikhil Kumar">
   <meta property="og:url" content="https://cracker-jack.github.io/nikhil-kumar-portfolio/">
@@ -20,21 +23,49 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/styles.css">
-  <script src="assets/site.js" defer></script>
+  <script src="assets/site.js?v=20260922" defer></script>
   <script type="module" src="assets/booking.js"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Person",
-    "name": "Nikhil Kumar",
-    "url": "https://cracker-jack.github.io/nikhil-kumar-portfolio/",
-    "jobTitle": "Software Engineer II",
-    "worksFor": { "@type": "Organization", "name": "Microsoft" },
-    "email": "mailto:kumarnikhil374@gmail.com",
-    "address": { "@type": "PostalAddress", "addressCountry": "IN" },
-    "alumniOf": { "@type": "CollegeOrUniversity", "name": "Netaji Subhas Institute of Technology, University of Delhi" },
-    "sameAs": ["https://www.linkedin.com/in/nikhilkr96/", "https://topmate.io/nikhil_kr"],
-    "knowsAbout": ["Distributed systems", "Consumption billing", "Data correctness", "Event-driven architecture", "Microservices"]
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://cracker-jack.github.io/nikhil-kumar-portfolio/#website",
+        "url": "https://cracker-jack.github.io/nikhil-kumar-portfolio/",
+        "name": "Nikhil Kumar Portfolio",
+        "inLanguage": "en-IN",
+        "publisher": { "@id": "https://cracker-jack.github.io/nikhil-kumar-portfolio/#person" }
+      },
+      {
+        "@type": "ProfilePage",
+        "@id": "https://cracker-jack.github.io/nikhil-kumar-portfolio/#profile",
+        "url": "https://cracker-jack.github.io/nikhil-kumar-portfolio/",
+        "name": "Nikhil Kumar | Software Engineer II at Microsoft",
+        "isPartOf": { "@id": "https://cracker-jack.github.io/nikhil-kumar-portfolio/#website" },
+        "mainEntity": { "@id": "https://cracker-jack.github.io/nikhil-kumar-portfolio/#person" }
+      },
+      {
+        "@type": "Person",
+        "@id": "https://cracker-jack.github.io/nikhil-kumar-portfolio/#person",
+        "name": "Nikhil Kumar",
+        "url": "https://cracker-jack.github.io/nikhil-kumar-portfolio/",
+        "description": "Software Engineer II at Microsoft with 8+ years of experience engineering reliable distributed systems and cloud products.",
+        "jobTitle": "Software Engineer II",
+        "worksFor": { "@type": "Organization", "name": "Microsoft" },
+        "email": "mailto:kumarnikhil374@gmail.com",
+        "address": { "@type": "PostalAddress", "addressCountry": "IN" },
+        "alumniOf": { "@type": "CollegeOrUniversity", "name": "Netaji Subhas Institute of Technology, University of Delhi" },
+        "sameAs": ["https://www.linkedin.com/in/nikhilkr96/", "https://topmate.io/nikhil_kr"],
+        "knowsAbout": ["Distributed systems", "Consumption billing", "Data correctness", "Event-driven architecture", "Microservices", "Multi-region systems", "Cloud security"],
+        "subjectOf": [
+          "https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/billing-system.html",
+          "https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/reporting.html",
+          "https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/free-trials.html",
+          "https://cracker-jack.github.io/nikhil-kumar-portfolio/projects/migration-assistant.html"
+        ]
+      }
+    ]
   }
   </script>
 </head>
@@ -53,7 +84,6 @@
           <li><a href="#about">About</a></li>
           <li><a href="#mentorship">Mentorship</a></li>
           <li><a href="#contact">Contact</a></li>
-          <li><a class="nav-resume" href="#resume">Resume <span aria-hidden="true">&#8595;</span></a></li>
         </ul>
       </nav>
     </div>
@@ -356,10 +386,10 @@
       <p class="source-note mentorship-source">Selected testimonial excerpts and profile figures from <a href="https://topmate.io/nikhil_kr">Topmate</a>, checked <time datetime="2026-09-13">13 September 2026</time>. Platform tenure is based on the March 2022 join date. Visit Topmate for current ratings, services, availability, and pricing.</p>
       <section class="direct-sessions" id="direct-sessions" aria-labelledby="direct-sessions-title" data-availability-api="https://nikhil-bookings-api-otzn3ne7rq-el.a.run.app/api/availability" data-booking-api="https://nikhil-bookings-api-otzn3ne7rq-el.a.run.app">
         <div class="direct-sessions-copy">
-          <p class="eyebrow">Arrange a direct session</p>
-          <h3 id="direct-sessions-title">Focused time.<br>Practical feedback.</h3>
-          <p>Choose a session, confirm a calendar-free slot, then pay securely through Razorpay Checkout.</p>
-          <p class="direct-availability">Usual availability in IST: weekdays 4&ndash;11 PM; weekends 11 AM&ndash;11 PM. Sessions finish by 11 PM. Confirmed payments receive a Google Calendar invitation by email.</p>
+          <h3 id="direct-sessions-title">Book a direct session.</h3>
+          <p>Choose a session, select a calendar-checked time, and pay securely through Razorpay. After payment is verified, a Google Calendar invitation is sent to your email.</p>
+          <p class="direct-availability">Availability is shown in IST: weekdays 4&ndash;11 PM; weekends 11 AM&ndash;11 PM. Sessions finish by 11 PM.</p>
+          <p class="direct-booking-alternative">Prefer Topmate? <a href="https://topmate.io/nikhil_kr">Book there using Topmate&rsquo;s services, availability, and pricing <span aria-hidden="true">&#8599;</span></a>.</p>
         </div>
         <div>
           <dl class="direct-session-prices" aria-label="Direct session prices in Indian rupees">
@@ -369,44 +399,59 @@
             <div data-service-id="lld-mock"><dt>LLD mock interview<span>60 minutes</span></dt><dd><data value="999">&#8377;999</data></dd></div>
             <div data-service-id="dsa-mock"><dt>Coding / DSA mock interview<span>60 minutes</span></dt><dd><data value="699">&#8377;699</data></dd></div>
           </dl>
-          <p class="direct-rates-note">These fees apply to direct sessions. Topmate bookings follow the pricing shown on Topmate.</p>
+          <p class="direct-rates-note">These fees apply only to direct bookings on this site.</p>
         </div>
         <div class="direct-payment-actions">
           <div data-slot-picker hidden>
-            <p class="booking-notice" id="booking-notice"><strong>Choose a preferred time, not a confirmed booking.</strong> These times follow my usual hours; live Google Calendar availability is not connected. Please agree the slot with me before paying.</p>
+            <p class="booking-notice" id="booking-notice"><strong>Choose your session and a calendar-checked time.</strong> A time is confirmed only after Razorpay verifies your payment and the calendar invitation is created.</p>
             <form data-booking-form aria-describedby="booking-notice">
               <fieldset class="booking-fields">
-                <legend>Your session preference</legend>
-                <div><label for="booking-service">Session</label><select id="booking-service" required aria-describedby="booking-service-details"><option value="">Choose a session</option></select><p class="booking-service-details" id="booking-service-details" role="status"></p></div>
-                <div><label for="booking-date">Preferred date</label><input id="booking-date" type="date" required></div>
-                <div><label for="booking-time">Preferred time (IST)</label><select id="booking-time" required disabled><option value="">Choose a time</option></select></div>
+                <legend>Choose your session</legend>
+                <div><label for="booking-service">Session</label><select id="booking-service" name="service" required aria-describedby="booking-service-details"><option value="">Choose a session</option></select><p class="booking-service-details" id="booking-service-details" role="status"></p></div>
+                <div><label for="booking-date">Preferred date</label><input id="booking-date" name="date" type="date" required></div>
+                <div class="booking-time-field"><label for="booking-time">Time (IST)</label><div class="booking-time-select"><select id="booking-time" name="time" required disabled><option value="">Choose a time</option></select></div><div class="booking-slot-options" data-slot-options aria-label="Available times in IST" hidden></div></div>
                 <div data-customer-field hidden><label for="booking-name">Your name</label><input id="booking-name" name="name" autocomplete="name" maxlength="80"></div>
-                <div data-customer-field hidden><label for="booking-email">Your email</label><input id="booking-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" pattern="^[^\s@]+@[^\s@]+\.[^\s@]{2,}$"></div>
+                <div data-customer-field hidden><label for="booking-email">Your email</label><input id="booking-email" name="email" type="email" inputmode="email" autocomplete="email" spellcheck="false" maxlength="120" pattern="^[^\s@]+@[^\s@]+\.[^\s@]{2,}$"></div>
+                <div class="booking-whatsapp" data-whatsapp-option hidden>
+                  <label class="booking-consent" for="booking-whatsapp-consent">
+                    <input id="booking-whatsapp-consent" name="whatsappConsent" type="checkbox" value="true">
+                    <span>Also send my booking confirmation on WhatsApp.</span>
+                  </label>
+                  <div data-whatsapp-phone hidden>
+                    <label for="booking-phone">WhatsApp number</label>
+                    <input id="booking-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" spellcheck="false" maxlength="18" placeholder="+919876543210" aria-describedby="booking-phone-hint">
+                    <p class="booking-service-details" id="booking-phone-hint">Include the country code. Consent applies only to booking confirmation messages from Nikhil Kumar.</p>
+                  </div>
+                </div>
               </fieldset>
+              <div class="booking-service-outcome" data-service-outcome aria-live="polite" hidden>
+                <h4>What we&rsquo;ll focus on</h4>
+                <p data-service-outcome-copy></p>
+              </div>
               <p class="booking-status" id="booking-status" role="status"></p>
               <p class="booking-notice" data-calendar-failure hidden>The calendar service is unavailable. <a href="mailto:kumarnikhil374@gmail.com?subject=Direct%20session%20enquiry">Email to arrange a session</a>; no slot has been reserved.</p>
+              <p class="booking-recovery" data-slot-recovery hidden><a href="mailto:kumarnikhil374@gmail.com?subject=Direct%20session%20enquiry">Request another time by email <span aria-hidden="true">&#8599;</span></a></p>
               <button class="button button-primary" type="submit">Review session &amp; payment <span aria-hidden="true">&#8594;</span></button>
             </form>
             <div class="booking-review" data-booking-review hidden>
-              <h4 id="booking-review-title" tabindex="-1">Your preferred session</h4>
+              <p class="booking-review-kicker">Ready for checkout</p>
+              <h4 id="booking-review-title" tabindex="-1">Confirm your session</h4>
+              <p class="booking-review-intro">This time is calendar-checked now. It becomes final after successful payment is verified.</p>
               <dl class="booking-summary">
                 <div><dt>Session</dt><dd data-review-service></dd></div>
-                <div><dt>Preferred time</dt><dd data-review-date></dd></div>
+                <div><dt>Selected time</dt><dd data-review-date></dd></div>
                 <div><dt>Session fee</dt><dd data-review-price></dd></div>
               </dl>
-              <label for="booking-note">Booking note</label>
-              <textarea id="booking-note" rows="3" readonly></textarea>
-              <button class="button button-secondary" type="button" data-copy-booking-note>Copy payment note</button>
-              <p class="booking-status" id="booking-copy-status" role="status"></p>
               <div class="actions">
                 <button class="button button-primary" type="button" aria-describedby="direct-payment-note booking-transfer-note" data-booking-pay>Pay with Razorpay <span aria-hidden="true">&#8594;</span></button>
               </div>
-              <p class="booking-transfer-note" id="booking-transfer-note">Payment opens Razorpay Checkout. After a verified captured payment, a Google Calendar invitation is sent to the email above. If confirmation cannot be completed automatically, the paid booking is flagged for manual resolution.</p>
+              <p class="booking-transfer-note" id="booking-transfer-note">Payment opens Razorpay Checkout. After verified payment, your Google Calendar invitation is sent to the email above. If the invitation cannot be created automatically, the paid booking is flagged for manual resolution.</p>
             </div>
             <div class="booking-confirmation" data-booking-confirmation role="region" aria-labelledby="booking-confirmation-title" hidden>
               <p class="booking-confirmation-thanks">Thank you.</p>
               <h4 id="booking-confirmation-title" tabindex="-1">Your session is confirmed</h4>
               <p data-confirmation-message></p>
+              <p data-confirmation-whatsapp hidden></p>
               <dl class="booking-summary">
                 <div><dt>Session</dt><dd data-confirmation-service></dd></div>
                 <div><dt>Confirmed time</dt><dd data-confirmation-time></dd></div>
@@ -515,15 +560,6 @@
             <p>I had the opportunity to be mentored by Nikhil throughout my career growth journey and I'm very grateful for his insight, patience and willingness to help both in the technical aspects through instruction but also through career advice and encouragement.</p>
           </blockquote>
         </figure>
-      </div>
-      <p class="source-note recommendations-source">Roles reflect the supplied LinkedIn profile headlines, not necessarily roles held on the recommendation date. LinkedIn may require sign-in.</p>
-    </section>
-
-    <section class="container resume-strip" id="resume" aria-labelledby="resume-title">
-      <div><h2 id="resume-title">The one-page version.</h2><p>Experience, projects, and skills in a format you can keep.</p></div>
-      <div class="actions">
-        <a class="button button-primary" href="assets/resume/Nikhil-Kumar-Resume.pdf" download>Resume PDF <span aria-hidden="true">&#8595;</span></a>
-        <a class="button button-secondary" href="assets/resume/Nikhil-Kumar-Resume.docx" download>Resume Word <span aria-hidden="true">&#8595;</span></a>
       </div>
     </section>
     <section class="contact-panel" id="contact" aria-labelledby="contact-title">

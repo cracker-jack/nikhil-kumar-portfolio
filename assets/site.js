@@ -1,6 +1,32 @@
 (() => {
   "use strict";
 
+  for (const link of document.querySelectorAll("a[href]")) {
+    let destination;
+    try {
+      destination = new URL(link.href, location.href);
+    } catch {
+      continue;
+    }
+    if (!["http:", "https:"].includes(destination.protocol) || destination.origin === location.origin) continue;
+    link.target = "_blank";
+    link.rel = [...new Set(`${link.rel} noopener noreferrer`.trim().split(/\s+/))].join(" ");
+    if (link.hasAttribute("aria-label")) {
+      const label = link.getAttribute("aria-label");
+      if (!/opens in (?:a )?new tab/i.test(label)) link.setAttribute("aria-label", `${label} (opens in a new tab)`);
+    } else if (!link.querySelector("[data-new-tab-note]")) {
+      const note = document.createElement("span");
+      note.className = "sr-only";
+      note.dataset.newTabNote = "";
+      note.textContent = " (opens in a new tab)";
+      link.append(note);
+    }
+  }
+})();
+
+(() => {
+  "use strict";
+
   const header = document.querySelector(".site-header");
   const nav = document.querySelector(".site-nav");
   const toggle = document.querySelector(".nav-toggle");

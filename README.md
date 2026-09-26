@@ -16,7 +16,7 @@ Open `http://127.0.0.1:4173/`. Stop the server with Ctrl+C.
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | Home, selected work, experience, about, Topmate mentorship, LinkedIn recommendations, contact, resume downloads |
+| `index.html` | Home, selected work, experience, about, Topmate mentorship, LinkedIn recommendations, and contact |
 | `explore.html` | Alternative, photo-led visual portfolio with an interactive four-project gallery |
 | `projects/billing-system.html` | Consumption Billing System |
 | `projects/reporting.html` | Consumption Reporting |
@@ -24,15 +24,17 @@ Open `http://127.0.0.1:4173/`. Stop the server with Ctrl+C.
 | `projects/migration-assistant.html` | DLP Migration Assistant |
 | `assets/styles.css` | Shared responsive styles and print layout |
 | `assets/visual.css` | Self-contained styles for the visual portfolio; does not restyle the classic pages |
-| `assets/site.js` | Keyboard-accessible mobile navigation and shared progressive carousel controls |
+| `assets/site.js` | Keyboard-accessible navigation, external-link safety, and shared progressive carousel controls |
 | `assets/booking.js`, `assets/booking-slots.js`, `assets/availability-client.js` | Preferred date/time selection, optional read-only calendar checks, review and hosted-payment handoff |
+| `integrations/whatsapp/` | Optional server-side Meta WhatsApp Cloud API confirmation adapter and tests |
 | `assets/favicon.svg` | Original abstract, non-letter icon |
 | `assets/social-card.svg` | Original 1200 x 630 social card |
 | `assets/social-card.png` | Browser-rasterized 1200 x 630 social sharing image |
-| `assets/resume/` | Approved, unmodified PDF and Word resume downloads |
 | `assets/images/` | User-approved portraits and Times Square image, optimized as responsive WebP and JPEG copies |
 | `.nojekyll` | Serve the site as plain static files on GitHub Pages |
 | `sitemap.xml` | The six canonical public page URLs |
+| `robots.txt` | Search crawler policy and sitemap discovery |
+| `llms.txt` | Concise, verified portfolio facts and canonical sources for AI systems |
 
 ## Editing
 
@@ -40,9 +42,9 @@ Open `http://127.0.0.1:4173/`. Stop the server with Ctrl+C.
 - The five classic pages share `assets/styles.css`; the visual edition uses `assets/visual.css`. All six share `assets/site.js`. Color and font variables are at the top of each stylesheet; all fonts are system fonts.
 - Header and footer markup is intentionally static. Apply shared navigation changes across the five classic pages and check the visual edition's separate navigation as well.
 - Keep links and asset paths relative so both a domain root and a project path work. Case studies use `../` for parent assets.
-- Replace resume copies in `assets/resume/` while keeping the filenames, or update the two download links in `index.html`.
+- External HTTP(S) destinations open in a new tab through `assets/site.js`; internal navigation, page anchors, and email links retain their default behavior.
 - Keep project claims scoped: reporting API capabilities are platform context, free-trial outcomes describe consumption rather than paid conversion, and migration backend work was co-owned.
-- The hero role is Software Engineer II at Microsoft. The approved downloadable resume files are distributed as supplied.
+- The hero role is Software Engineer II at Microsoft.
 - Navigation uses the full name. The favicon and social image do not use an initials monogram.
 
 ## Visual portfolio
@@ -53,7 +55,7 @@ Open `http://127.0.0.1:4173/`. Stop the server with Ctrl+C.
 - The project gallery uses native horizontal scrolling and scroll snap. Project selector links and every case study remain usable without JavaScript. Progressive controls add previous/next buttons, the current project state, a counter, and Left/Right/Home/End keyboard support on the focused gallery.
 - `assets/site.js` shares carousel behavior between the classic Topmate reviews and the visual project gallery. New galleries use `data-carousel`, `data-carousel-track`, `data-carousel-slide`, `data-carousel-controls`, and `data-carousel-status`; selector links are optional `data-carousel-link` anchors to slide IDs. Existing testimonial classes remain supported.
 - There is no autoplay or scroll hijacking. A single short portrait entrance and smooth gallery movement honor reduced-motion preferences; content is visible by default.
-- The page reuses only the approved local portrait and Times Square variants, existing resume downloads, sourced career/project facts, and a complete user-supplied LinkedIn recommendation with its original date.
+- The page reuses only the approved local portrait and Times Square variants, sourced career/project facts, and a complete user-supplied LinkedIn recommendation with its original date.
 - This page loads `assets/visual.css` instead of the classic stylesheet. Keep its navigation compatible with the shared script when editing.
 
 ## Portraits
@@ -125,9 +127,9 @@ The public base URL is:
 
 `https://cracker-jack.github.io/nikhil-kumar-portfolio/`
 
-All six pages have matching absolute canonical and `og:url` values. Their `og:image` points to the public `assets/social-card.png`; Person structured data points to the public home URL. `sitemap.xml` lists the same six canonical URLs.
+All six pages have matching absolute canonical and `og:url` values. Their `og:image` points to the public `assets/social-card.png`; linked schema.org graphs connect the Person profile, site, visual portfolio, and authored project case studies. `sitemap.xml` lists the same six canonical URLs, `robots.txt` advertises that sitemap, and `llms.txt` provides a verified machine-readable profile summary.
 
-If the domain or repository name changes, update those metadata values and the sitemap together. Navigation, stylesheets, scripts, favicon, and downloads use relative paths and also work at a domain root.
+If the domain or repository name changes, update those metadata values, structured data, `robots.txt`, `llms.txt`, and the sitemap together. Navigation, stylesheets, scripts, and favicon use relative paths and also work at a domain root.
 
 GitHub authentication, repository changes, and publishing are managed separately. These configured URLs do not by themselves mean the site has been deployed.
 

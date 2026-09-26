@@ -26,7 +26,7 @@ const callback = () => ({
 });
 
 function fixture(overrides = {}) {
-  const calls = { orders: 0, verify: 0, availability: 0, events: 0, logs: [] };
+  const calls = { orders: 0, verify: 0, availability: 0, events: 0, whatsapp: [], logs: [] };
   const availabilityService = {
     async getAvailability(input) {
       calls.availability++;
@@ -55,6 +55,7 @@ function fixture(overrides = {}) {
     },
   };
   const store = new MemoryBookingStore();
+  const whatsapp = overrides.whatsapp === false ? null : overrides.whatsapp || null;
   const service = createBookingService({
     availabilityService, razorpay, store,
     calendarConfig: { calendarId: "calendar@example.invalid", ownerEmail: "owner@example.invalid", clientId: "client.apps.googleusercontent.com", clientSecret: "secret" },
@@ -77,6 +78,7 @@ function fixture(overrides = {}) {
       if (overrides.eventResponse) return overrides.eventResponse;
       return new Response(JSON.stringify({ kind: "calendar#event", id: "event_fixture", htmlLink: "https://calendar.example.invalid/event" }));
     },
+    whatsapp,
     now: () => NOW,
     logger: (message) => calls.logs.push(message),
   });
@@ -110,6 +112,16 @@ test("active payment hold prevents a second checkout for the same slot", async (
   assert.equal(calls.orders, 1);
 });
 
+test("WhatsApp opt-in fails explicitly when notifications are not configured", async () => {
+  const { service, calls } = fixture();
+  await assert.rejects(service.createIntent({
+    serviceId: "mentorship", date: "2026-09-16", time: "16:00",
+    customerName: "Nikhil Kumar", customerEmail: "user@example.com",
+    customerPhone: "+919876543210", whatsappConsent: true,
+  }), { code: "whatsapp_unavailable", status: 503 });
+  assert.equal(calls.orders, 0);
+});
+
 test("invalid slot and customer details fail before payment order creation", async () => {
   assert.throws(() => validateBookingIntent({
     serviceId: "mentorship", date: "2026-09-16", time: "16:00", customerName: "A", customerEmail: "bad",
@@ -120,6 +132,15 @@ test("invalid slot and customer details fail before payment order creation", asy
   assert.throws(() => validateBookingIntent({
     serviceId: "mentorship", date: "2026-09-16", time: "16:00", customerName: "Nikhil Kumar", customerEmail: "bad..dots@example.com",
   }, SERVICES, NOW), /Email is invalid/);
+  assert.throws(() => validateBookingIntent({
+    serviceId: "mentorship", date: "2026-09-16", time: "16:00",
+    customerName: "Nikhil Kumar", customerEmail: "user@example.com", customerPhone: "+919876543210",
+  }, SERVICES, NOW), /WhatsApp consent is required/);
+  assert.throws(() => validateBookingIntent({
+    serviceId: "mentorship", date: "2026-09-16", time: "16:00",
+    customerName: "Nikhil Kumar", customerEmail: "user@example.com",
+    customerPhone: "9876543210", whatsappConsent: true,
+  }, SERVICES, NOW), /international format/);
   assert.throws(() => validateBookingIntent({
     serviceId: "mentorship", date: "2026-09-14", time: "16:00", customerName: "Nikhil Kumar", customerEmail: "user@example.com",
   }, SERVICES, NOW), /Choose today or a future date/);
@@ -143,6 +164,56 @@ test("captured checkout creates a calendar invitation and reports confirmed book
   assert.equal(booking.calendarEvent.eventLink, "https://calendar.example.invalid/event");
   assert.equal(calls.verify, 1);
   assert.equal(calls.events, 1);
+});
+
+test("confirmed booking sends an opted-in WhatsApp confirmation and records delivery", async () => {
+  const calls = [];
+  const { service } = fixture({
+    whatsapp: {
+      async sendBookingConfirmation(message) {
+        calls.push(message);
+        return { messageId: "wamid.booking-fixture" };
+      },
+    },
+  });
+  const intent = await service.createIntent({
+    serviceId: "mentorship", date: "2026-09-16", time: "16:00",
+    customerName: "Nikhil Kumar", customerEmail: "user@example.com",
+    customerPhone: "+91 98765 43210", whatsappConsent: true,
+  });
+  assert.deepEqual(intent.booking.whatsapp, { requested: true, status: "pending" });
+  const booking = await service.confirmCheckout(callback());
+  assert.equal(booking.status, "confirmed");
+  assert.deepEqual(booking.whatsapp, { requested: true, status: "sent" });
+  assert.deepEqual(calls, [{
+    phone: "+919876543210",
+    customerName: "Nikhil Kumar",
+    serviceName: "Mentorship",
+    confirmedTime: "16 September 2026, 4:00 PM - 4:30 PM IST",
+    bookingId: intent.booking.bookingId,
+    paymentReference: "pay_BookingFixture",
+  }]);
+});
+
+test("WhatsApp failure is recorded without downgrading a confirmed booking", async () => {
+  const { service, calls } = fixture({
+    whatsapp: {
+      async sendBookingConfirmation() {
+        const error = new Error("private provider detail");
+        error.code = "whatsapp_delivery_failed";
+        throw error;
+      },
+    },
+  });
+  await service.createIntent({
+    serviceId: "mentorship", date: "2026-09-16", time: "16:00",
+    customerName: "Nikhil Kumar", customerEmail: "user@example.com",
+    customerPhone: "+919876543210", whatsappConsent: true,
+  });
+  const booking = await service.confirmCheckout(callback());
+  assert.equal(booking.status, "confirmed");
+  assert.deepEqual(booking.whatsapp, { requested: true, status: "failed" });
+  assert.deepEqual(calls.logs, ["WHATSAPP_CONFIRMATION_FAILED: whatsapp_delivery_failed"]);
 });
 
 test("captured payment is flagged for manual resolution when calendar turns busy", async () => {

@@ -33,19 +33,22 @@ test("Standard Checkout is explicit and no unverified hosted-payment fallback re
   assert.match(section, /data-book-another/);
   assert.match(section, /id="direct-payment-note"/);
   assert.match(section, /Booking is confirmed only after verified payment\./);
-  assert.match(section, /confirmed payments receive a Google Calendar invitation/i);
+  assert.match(section, /calendar-checked time/i);
   assert.doesNotMatch(section, /<(?:iframe|script)\b/);
   assert.match(section, /data-slot-picker hidden/);
   assert.match(section, /<div data-booking-fallback>/);
   assert.match(section, /do not send payment until the service is restored/i);
-  assert.match(section, /live Google Calendar availability is not connected/);
-  assert.match(section, /After a verified captured payment/);
+  assert.match(section, /After verified payment/);
+  assert.match(section, /data-slot-options/);
+  assert.match(section, /data-service-outcome/);
+  assert.doesNotMatch(section, /data-copy-booking-note|id="booking-note"/);
 });
 
 test("direct sessions retain an email-first path and separate Topmate pricing", () => {
   assert.ok(section);
   assert.match(section, /href="mailto:kumarnikhil374@gmail\.com\?subject=Direct%20session%20enquiry"/);
-  assert.match(section, /Topmate bookings follow the pricing shown on Topmate/);
+  assert.match(section, /Topmate&rsquo;s services, availability, and pricing/);
+  assert.match(section, /These fees apply only to direct bookings on this site/);
   assert.match(html, /href="#direct-sessions"/);
   for (const serviceId of ["12607", "12608", "445164", "457759"]) {
     assert.ok(html.includes(`href="https://topmate.io/nikhil_kr/${serviceId}"`));

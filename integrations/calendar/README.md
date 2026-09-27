@@ -1,8 +1,8 @@
 # Calendar availability, payments and booking notifications
 
-The homepage offers a **direct-session picker**. With only the availability backend configured, it removes overlapping busy times from Google Calendar and still treats the selection as a preference. With booking runtime configuration enabled, the same picker collects the customer's name/email, creates a server-priced Razorpay Checkout order, verifies captured payment server-side, rechecks Calendar, then creates a Google Calendar event with the customer as an attendee so Google sends the confirmation invite. When the optional Meta WhatsApp configuration is complete, the picker also offers an unchecked WhatsApp consent control and sends an approved utility-template confirmation after the Calendar booking succeeds.
+The homepage offers a **direct-session picker**. With only the availability backend configured, it removes overlapping busy times from Google Calendar and still treats the selection as a preference. With booking runtime configuration enabled, the same picker collects the customer's name/email, creates a server-priced Razorpay Checkout order, verifies captured payment server-side, rechecks Calendar, then creates a Google Calendar event with the customer as an attendee so Google sends the confirmation invite. WhatsApp confirmation is parked in source only and is not included in the deployed runtime.
 
-`assets/booking-slots.js` supplies future-only, 30-minute-grid preferences in `Asia/Kolkata`: weekdays 16:00-23:00 and weekends 11:00-23:00. The selected 30/60-minute session must finish by 23:00. It does not query Google or invent free/busy data. `assets/booking.js` enhances the homepage with validation, review, a copyable payment note and a prefilled email request. Browser modules use `.js` because some Windows static servers serve `.mjs` as `text/plain`. No JavaScript, or a failed module load, leaves the original email/payment links available.
+`assets/booking-slots.js` supplies future-only, 30-minute-grid preferences in `Asia/Kolkata`: weekdays 16:00-23:00 and weekends 11:00-23:00. The selected 30/60-minute session must finish by 23:00. It does not query Google or invent free/busy data. `assets/booking.js` enhances the homepage with validation, review and a prefilled email request. Browser modules use `.js` because some Windows static servers serve `.mjs` as `text/plain`. No JavaScript, or a failed module load, leaves the original email/payment links available.
 
 The hosted Razorpay.me URL remains only as the no-JavaScript/email-first fallback. Automatic confirmation uses Razorpay Standard Checkout orders created by the backend; the browser receives only the Key ID, order ID, amount, service metadata and prefill fields. The Key Secret, webhook secret, customer booking record and Google authorization stay server-side.
 
@@ -27,11 +27,6 @@ The prepared private file has these fields:
 | `RAZORPAY_ENABLE_CARDS` | Set exactly `true` to enable cards; otherwise Checkout is UPI-focused |
 | `BOOKINGS_PROJECT_ID` | Google Cloud project that owns the Firestore booking records, for example `portfolio-bookings` |
 | `FIRESTORE_DATABASE_ID` | Optional Firestore database ID; defaults to `(default)` |
-| `WHATSAPP_ACCESS_TOKEN` | Meta WhatsApp Cloud API system-user token; server secret only |
-| `WHATSAPP_PHONE_NUMBER_ID` | Numeric Phone Number ID from WhatsApp Manager, not the visible phone number |
-| `WHATSAPP_GRAPH_API_VERSION` | Explicit supported Graph API version, for example `v24.0`; verify the current version in Meta documentation |
-| `WHATSAPP_TEMPLATE_NAME` | Optional approved utility template name; defaults to `booking_confirmation` |
-| `WHATSAPP_TEMPLATE_LANGUAGE` | Optional approved template language code; defaults to `en` |
 | `GOOGLE_CLIENT_ID` | Google OAuth Web application client ID |
 | `GOOGLE_CLIENT_SECRET` | The same client's secret |
 | `GOOGLE_OWNER_EMAIL` | The account that owns the booking calendar |
@@ -87,14 +82,14 @@ After completing the owner authorization above, run this separately from the sta
 node --env-file="$envFile" .\integrations\calendar\availability-server.mjs
 ```
 
-The API binds only to `127.0.0.1:4175` locally. It reads configuration and saved authorization at startup; restart this API process after changing credentials or reauthorizing. Without Razorpay and Firestore settings, only `/api/availability` is enabled. With `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `BOOKINGS_PROJECT_ID`, the booking endpoints are enabled too. WhatsApp remains disabled unless its access token, Phone Number ID and Graph API version are all valid. With the website preview on port 4173, open:
+The API binds only to `127.0.0.1:4175` locally. It reads configuration and saved authorization at startup; restart this API process after changing credentials or reauthorizing. Without Razorpay and Firestore settings, only `/api/availability` is enabled. With `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `BOOKINGS_PROJECT_ID`, the booking endpoints are enabled too. WhatsApp remains disabled regardless of provider credentials. With the website preview on port 4173, open:
 
 `http://127.0.0.1:4173/?calendar=local#direct-sessions`
 
 The `calendar=local` switch works only on a loopback website hostname. It is ignored on GitHub Pages; a visitor cannot use a query parameter to substitute a production API endpoint. Without this switch or a configured HTTPS endpoint, the existing preference-only flow is unchanged.
 
 - `GET /healthz` indicates process health, **not** valid Google authorization.
-- `GET /api/capabilities` tells the browser whether verified booking and optional WhatsApp confirmation are configured. The phone and consent controls remain hidden unless the backend reports WhatsApp as enabled.
+- `GET /api/capabilities` tells the browser whether verified booking is configured. It always reports WhatsApp disabled in this deployment, so the phone and consent controls remain hidden.
 - `POST /api/availability` accepts exactly `{"serviceId":"mentorship","date":"YYYY-MM-DD"}` with `Content-Type: application/json`. Use a real future date.
 - `POST /api/bookings/intent` accepts `serviceId`, `date`, `time`, `customerName` and `customerEmail`, plus `customerPhone` and `whatsappConsent: true` only after explicit opt-in. It rechecks availability, persists a pending booking in Firestore and creates a Razorpay order with the server-side amount.
 - `POST /api/payments/checkout-callback` accepts the Razorpay Checkout response, verifies the HMAC signature, fetches the payment/order from Razorpay, requires captured payment, rechecks Calendar and creates the Google Calendar event invite.
@@ -108,40 +103,13 @@ The `calendar=local` switch works only on a loopback website hostname. It is ign
 - Availability requests are limited to 1 KiB, booking/callback requests to 4 KiB and webhooks to 256 KiB. CORS allows the portfolio origin and local previews by default; use `ALLOWED_ORIGINS` to specify the exact production origin.
 - This is a public availability API, not an authenticated booking endpoint. CORS does not stop non-browser callers. In-memory limits are not distributed quotas or a hard spending cap.
 - Firestore is the durable source for customer booking records. Do not use Cloud Run memory or `/tmp` for paid booking state.
-- WhatsApp delivery happens only after the booking is `confirmed`. A WhatsApp provider failure is recorded on the booking and logged with a safe error code; it does not downgrade a successfully paid and calendared booking.
+- WhatsApp delivery is not wired into this deployed server; booking confirmations use the Google Calendar invitation.
 
-## Optional WhatsApp confirmation
+## Parked WhatsApp confirmation code
 
-Use the **Meta WhatsApp Cloud API directly**. Do not put Meta tokens, Phone Number IDs or provider responses in browser JavaScript.
+The Meta adapter (`integrations/whatsapp/cloud-api.mjs`), opt-in UI and isolated tests remain in the repository for future work, but the production server does not import the adapter, the deployment image does not contain it, and the deployment script does not configure any WhatsApp environment variables or secrets. `/api/capabilities` reports `whatsappConfirmationEnabled: false` even if WhatsApp variables are present; the browser hides phone and consent inputs. A client that submits WhatsApp consent is rejected before an order is created. Do not put Meta tokens, Phone Number IDs or provider responses in browser JavaScript.
 
-1. In Meta Business Manager, add or select the WhatsApp business account and sending number.
-2. Create and obtain approval for a **utility** template named `booking_confirmation` in language `en`, or configure matching values during deployment.
-3. The template body must contain these five text variables in this exact order:
-
-   ```text
-   {{1}} customer name
-   {{2}} session name
-   {{3}} confirmed date and time in IST
-   {{4}} booking reference
-   {{5}} Razorpay payment reference
-   ```
-
-   Suggested body:
-
-   ```text
-   Hi {{1}}, your {{2}} session with Nikhil Kumar is confirmed for {{3}}.
-   Booking reference: {{4}}
-   Payment reference: {{5}}
-   A Google Calendar invitation has also been sent to your booking email.
-   ```
-
-4. Create a long-lived system-user access token with only the WhatsApp permissions needed for sending messages. Store it in Secret Manager as `whatsapp-access-token`; never add it to the repository.
-5. Record the numeric **Phone Number ID** and the currently supported Graph API version. The Phone Number ID is not the visible `+91...` business number.
-6. Deploy with the optional variables documented below. The script fails before deployment if only part of the WhatsApp configuration is supplied.
-
-The browser displays an unchecked consent box only when `/api/capabilities` reports that WhatsApp is configured. Consent is stored with its version and timestamp. The phone number is normalized to E.164 international format and is never returned by the public booking API.
-
-WhatsApp is a convenience notification, not the source of truth. The verified booking record, email and Google Calendar event remain authoritative.
+Do not create a Meta token or template for this deployment. Re-enabling delivery requires an explicit future code change to wire and package the adapter, followed by consent and provider testing; setting environment variables alone is insufficient.
 
 ## Cloud Run preparation
 
@@ -154,7 +122,7 @@ $sourceDirectory = Read-Host 'Absolute empty deployment directory outside the re
 node .\integrations\calendar\prepare-deployment.mjs "$sourceDirectory"
 ```
 
-This copies exactly the allowlisted backend files: the Dockerfile, shared slot helper, Razorpay payment/client modules, WhatsApp adapter and calendar runtime modules. It does not upload anything. Never add credentials to this directory and never deploy from the whole website root.
+This copies exactly the eight allowlisted backend files: the Dockerfile, shared slot helper, Razorpay payment/client modules and calendar runtime modules. It does not upload anything. Never add credentials to this directory and never deploy from the whole website root.
 
 When the target project and private Secret Manager destination are approved:
 
@@ -173,8 +141,8 @@ Deployment configuration:
 | APIs | Cloud Run, Cloud Build, Artifact Registry, Secret Manager and Firestore |
 | Build identity | Dedicated build service account with `roles/run.builder`; deployer needs the documented source-deployment and service-account-use permissions |
 | Runtime identity | Separate service account with `roles/secretmanager.secretAccessor` on the required secrets only; do not generate a service-account key |
-| Runtime secrets | Mount the Calendar bundle as `/secrets/calendar/calendar-runtime.json`; inject Razorpay secrets and the optional WhatsApp access token as secret environment variables |
-| Runtime configuration | `CALENDAR_CREDENTIALS_FILE=/secrets/calendar/calendar-runtime.json`, `ALLOWED_ORIGINS=https://cracker-jack.github.io`, `BOOKINGS_PROJECT_ID=portfolio-bookings` plus Razorpay configuration. WhatsApp additionally requires its Phone Number ID and Graph API version. |
+| Runtime secrets | Mount the Calendar bundle as `/secrets/calendar/calendar-runtime.json`; inject Razorpay secrets as secret environment variables. Do not supply WhatsApp secrets. |
+| Runtime configuration | `CALENDAR_CREDENTIALS_FILE=/secrets/calendar/calendar-runtime.json`, `ALLOWED_ORIGINS=https://cracker-jack.github.io`, `BOOKINGS_PROJECT_ID=portfolio-bookings` plus Razorpay configuration. No WhatsApp settings are used. |
 | Resource settings | Request-based billing, minimum 0, service maximum 1 instance, concurrency 8, CPU 1, memory 256 MiB |
 | Port | Cloud Run supplies `PORT`; `K_SERVICE` enables binding to `0.0.0.0` inside the container |
 | Public invocation | Required for the static site's anonymous requests; do not bypass organization policies that disallow it |
@@ -185,22 +153,11 @@ After a successful deployment, verify an actual future-date availability POST, i
 
 Minimum-zero instances and maximum-instance limits do not guarantee zero cost. Cloud Build, Artifact Registry storage, Secret Manager and network/request usage may incur charges; budgets/alerts are not hard caps. Rebuild periodically for Node/base-image patches. For credential rotation, create a new secret version, deploy a revision pinned to it, and check Google availability again; this runtime reads its bundle at startup.
 
-Deploy with WhatsApp disabled:
+Deploy the Calendar and payment API with WhatsApp offline:
 
 ```bash
 bash integrations/calendar/deploy-cloud-run-bookings.sh
 ```
-
-Deploy with WhatsApp enabled after `whatsapp-access-token` and the approved template exist:
-
-```bash
-WHATSAPP_PHONE_NUMBER_ID="YOUR_NUMERIC_PHONE_NUMBER_ID" \
-WHATSAPP_GRAPH_API_VERSION="v24.0" \
-WHATSAPP_ACCESS_TOKEN_SECRET="whatsapp-access-token:latest" \
-bash integrations/calendar/deploy-cloud-run-bookings.sh
-```
-
-Set `WHATSAPP_TEMPLATE_NAME` and `WHATSAPP_TEMPLATE_LANGUAGE` only when the approved template differs from `booking_confirmation` / `en`. Confirm the currently supported Graph API version in Meta's documentation rather than copying the example indefinitely.
 
 ## Payment confirmation behavior
 
@@ -208,7 +165,7 @@ Successful local OAuth and API startup do **not** update the published GitHub Pa
 
 Payment confirmation is intentionally conservative: browser callback HMAC is verified, Razorpay payment/order are fetched server-side, the amount/currency/service/order must match the persisted booking, the payment must be captured, and Calendar is checked again before an invite is created. If payment is captured but the slot is no longer free or the invite cannot be created, the booking is marked for manual resolution rather than reported as confirmed.
 
-WhatsApp is deliberately downstream of the authoritative confirmation. It is attempted only after the booking record is `confirmed` and the Calendar event exists. Provider failures are stored as `whatsappDelivery.status = failed` and logged using safe codes; they never change the booking back to a failure state. The public response exposes only whether WhatsApp was requested and whether delivery was sent, failed or pending—never the phone number, access token or provider payload.
+The deployed server does not enable WhatsApp, so a successful booking returns only the verified payment and Google Calendar confirmation; no WhatsApp delivery is attempted.
 
 ## Tests
 

@@ -9,7 +9,7 @@ This document explains how the direct-session booking flow was built for the sta
 - Show real available slots from Google Calendar before payment.
 - Confirm a booking only after Razorpay reports a captured payment and the server verifies it.
 - Send the customer a Google Calendar invitation after verified payment.
-- Optionally send an approved WhatsApp utility-template confirmation after explicit consent and successful Calendar confirmation.
+- Keep WhatsApp confirmation code offline; deployed bookings send Google Calendar invitations only.
 - Avoid fake forms, browser-trusted payment state, trackers, cookies, or exposed secrets.
 
 ## High-level architecture
@@ -58,7 +58,7 @@ flowchart LR
 | `integrations/razorpay/api-client.mjs` | Cloud Run | Razorpay order creation, checkout options, signature verification, provider reconciliation. |
 | `integrations/razorpay/payment-model.mjs` | Cloud Run / tests | Service catalog, amount validation, payment state transitions, webhook signature verification. |
 | `integrations/calendar/deploy-cloud-run-bookings.sh` | Cloud Shell | Builds an allowlisted backend bundle and deploys Cloud Run. |
-| `integrations/whatsapp/cloud-api.mjs` | Cloud Run | Optional Meta Cloud API adapter for consented booking confirmations. |
+| `integrations/whatsapp/cloud-api.mjs` | Repository only | Parked Meta Cloud API adapter; not packaged or imported by the deployed server. |
 
 ## Low-level design
 
@@ -86,11 +86,11 @@ Creating a booking intent places a 15-minute server-side hold on the selected sl
 
 Checkout is disabled at backend startup unless the deployed Google authorization includes `calendar.events`. This fail-closed check prevents accepting a payment when the runtime credential can read availability but cannot create the customer invitation.
 
-WhatsApp is deliberately downstream of the authoritative confirmation. It is attempted only after the booking record is `confirmed` and the Calendar event exists. Provider failures are stored as `whatsappDelivery.status = failed` and logged using safe codes; they never change the booking back to a failure state. The public response exposes only whether WhatsApp was requested and whether delivery was sent, failed or pending—never the phone number, access token or provider payload.
+WhatsApp delivery remains offline. The deployed server does not import or configure the adapter, so confirmed bookings produce the Google Calendar invitation without any WhatsApp attempt.
 
 After a confirmed callback, the browser replaces the form with a thank-you view containing the authoritative session time, booking reference, payment reference, Calendar event link, and WhatsApp delivery result when requested. The original form values are cleared, visibility changes from the Razorpay modal cannot overwrite the confirmation, and **Book another session** starts with an empty picker.
 
-The browser fetches `/api/capabilities` before exposing WhatsApp consent. Missing or partial Meta configuration leaves the option hidden. A checked consent control reveals an international-format phone field; the backend validates the number again and stores the consent version and timestamp with the private booking record.
+The browser fetches `/api/capabilities` before exposing WhatsApp consent. The deployed server always reports WhatsApp disabled; the phone and consent controls remain hidden even when Meta configuration is present. A direct opt-in request is rejected before creating a payment order.
 
 ### Firestore record shape
 

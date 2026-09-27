@@ -3,7 +3,6 @@ WORKDIR /app
 COPY --chown=node:node assets/booking-slots.js assets/booking-slots.js
 COPY --chown=node:node integrations/razorpay/payment-model.mjs integrations/razorpay/payment-model.mjs
 COPY --chown=node:node integrations/razorpay/api-client.mjs integrations/razorpay/api-client.mjs
-COPY --chown=node:node integrations/whatsapp/cloud-api.mjs integrations/whatsapp/cloud-api.mjs
 COPY --chown=node:node integrations/calendar/google-oauth.mjs integrations/calendar/google-oauth.mjs
 COPY --chown=node:node integrations/calendar/availability.mjs integrations/calendar/availability.mjs
 COPY --chown=node:node integrations/calendar/booking-service.mjs integrations/calendar/booking-service.mjs

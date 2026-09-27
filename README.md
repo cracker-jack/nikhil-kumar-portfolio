@@ -26,7 +26,7 @@ Open `http://127.0.0.1:4173/`. Stop the server with Ctrl+C.
 | `assets/visual.css` | Self-contained styles for the visual portfolio; does not restyle the classic pages |
 | `assets/site.js` | Keyboard-accessible navigation, external-link safety, and shared progressive carousel controls |
 | `assets/booking.js`, `assets/booking-slots.js`, `assets/availability-client.js` | Preferred date/time selection, optional read-only calendar checks, review and hosted-payment handoff |
-| `integrations/whatsapp/` | Optional server-side Meta WhatsApp Cloud API confirmation adapter and tests |
+| `integrations/whatsapp/` | Parked Meta WhatsApp Cloud API adapter and tests; excluded from the deployed runtime |
 | `assets/favicon.svg` | Original abstract, non-letter icon |
 | `assets/social-card.svg` | Original 1200 x 630 social card |
 | `assets/social-card.png` | Browser-rasterized 1200 x 630 social sharing image |

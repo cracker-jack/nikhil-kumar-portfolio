@@ -20,13 +20,12 @@ test("deployment packaging includes only allowlisted runtime source files and re
   assert.equal(run(destination).status, 0);
   const files = readdirSync(destination, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile()).map((entry) => join(entry.parentPath, entry.name));
-  assert.equal(files.length, 9);
+  assert.equal(files.length, 8);
   const expected = [
     ["Dockerfile", "integrations", "calendar", "Dockerfile"],
     ["assets/booking-slots.js", "assets", "booking-slots.js"],
     ["integrations/razorpay/payment-model.mjs", "integrations", "razorpay", "payment-model.mjs"],
     ["integrations/razorpay/api-client.mjs", "integrations", "razorpay", "api-client.mjs"],
-    ["integrations/whatsapp/cloud-api.mjs", "integrations", "whatsapp", "cloud-api.mjs"],
     ...["google-oauth.mjs", "availability.mjs", "booking-service.mjs", "availability-server.mjs"].map((file) => [`integrations/calendar/${file}`, "integrations", "calendar", file]),
   ];
   for (const [target, ...source] of expected) {
@@ -37,6 +36,11 @@ test("deployment packaging includes only allowlisted runtime source files and re
     assert.ok(dockerfile.includes(`COPY --chown=node:node ${target} ${target}`),
       `The image must copy ${target} before startup.`);
   }
+  assert.ok(!files.some((file) => file.includes("whatsapp")));
+  const server = readFileSync(join(destination, "integrations", "calendar", "availability-server.mjs"), "utf8");
+  assert.doesNotMatch(server, /createWhatsAppFromEnv|whatsapp\/cloud-api/);
+  const deploy = readFileSync(resolve("integrations", "calendar", "deploy-cloud-run-bookings.sh"), "utf8");
+  assert.doesNotMatch(deploy, /WHATSAPP_/);
   assert.notEqual(run(destination).status, 0);
   assert.notEqual(run(resolve("assets")).status, 0);
   const load = spawnSync(process.execPath, ["--input-type=module", "-e",

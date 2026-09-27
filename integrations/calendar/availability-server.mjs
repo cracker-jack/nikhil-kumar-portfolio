@@ -9,7 +9,6 @@ import {
   verifyRazorpayWebhookFromEnv,
 } from "./booking-service.mjs";
 import { PaymentError } from "../razorpay/payment-model.mjs";
-import { WhatsAppError, createWhatsAppFromEnv } from "../whatsapp/cloud-api.mjs";
 
 export function readPrivateCredentials(env) {
   try {
@@ -164,17 +163,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           projectId: process.env.BOOKINGS_PROJECT_ID,
           databaseId: process.env.FIRESTORE_DATABASE_ID || "(default)",
         });
-        let whatsapp = null;
-        try {
-          whatsapp = createWhatsAppFromEnv(process.env);
-        } catch (error) {
-          console.error(error instanceof WhatsAppError
-            ? `WHATSAPP_CONFIGURATION_DISABLED: ${error.code}`
-            : "WHATSAPP_CONFIGURATION_DISABLED: UNKNOWN_ERROR");
-        }
         bookingService = createBookingService({
           availabilityService: service, razorpay, store, calendarConfig: config, savedAuthorization: saved,
-          whatsapp,
           logger: (message) => console.error(message),
         });
         if (process.env.RAZORPAY_WEBHOOK_SECRET) {
@@ -195,7 +185,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     });
   } catch (error) {
     if (error instanceof CalendarAuthError || error instanceof BookingError
-      || error instanceof PaymentError || error instanceof WhatsAppError) {
+      || error instanceof PaymentError) {
       console.error(`${error.code}: ${error.message}`);
     } else {
       console.error("Availability API configuration is invalid.");

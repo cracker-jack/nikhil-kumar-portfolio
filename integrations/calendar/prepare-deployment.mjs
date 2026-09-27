@@ -20,7 +20,6 @@ const sources = [
   ["assets/booking-slots.js", "assets/booking-slots.js"],
   ["integrations/razorpay/payment-model.mjs", "integrations/razorpay/payment-model.mjs"],
   ["integrations/razorpay/api-client.mjs", "integrations/razorpay/api-client.mjs"],
-  ["integrations/whatsapp/cloud-api.mjs", "integrations/whatsapp/cloud-api.mjs"],
   ["integrations/calendar/google-oauth.mjs", "integrations/calendar/google-oauth.mjs"],
   ["integrations/calendar/availability.mjs", "integrations/calendar/availability.mjs"],
   ["integrations/calendar/booking-service.mjs", "integrations/calendar/booking-service.mjs"],

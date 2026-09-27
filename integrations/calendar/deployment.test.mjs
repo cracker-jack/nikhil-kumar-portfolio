@@ -32,6 +32,11 @@ test("deployment packaging includes only allowlisted runtime source files and re
   for (const [target, ...source] of expected) {
     assert.deepEqual(readFileSync(join(destination, ...target.split("/"))), readFileSync(resolve(...source)));
   }
+  const dockerfile = readFileSync(join(destination, "Dockerfile"), "utf8");
+  for (const [target] of expected.filter(([target]) => target !== "Dockerfile")) {
+    assert.ok(dockerfile.includes(`COPY --chown=node:node ${target} ${target}`),
+      `The image must copy ${target} before startup.`);
+  }
   assert.notEqual(run(destination).status, 0);
   assert.notEqual(run(resolve("assets")).status, 0);
   const load = spawnSync(process.execPath, ["--input-type=module", "-e",
